@@ -64,6 +64,8 @@ Select:
 This command will also create other binaries such as pesymbols ans peinfo.
 
 ```
+git clone https://github.com/endgameinc/xori.git
+cd xori
 cargo build --release
 ```
 
