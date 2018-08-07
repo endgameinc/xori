@@ -41,7 +41,7 @@ What it doesn't do yet:
 ## [Documentation](doc/xori/)
 
 ## Requirements
-rustc 1.27.0+
+rustc 1.27.0
 
 ### Install rust for OSX & Linux Distros
 
