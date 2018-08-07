@@ -40,8 +40,6 @@ What it doesn't do yet:
 
 ## [Documentation](doc/xori/)
 
-## [Code](https://git.endgames.local/amanda/xori)
-
 ## Requirements
 rustc 1.27.0+
 
