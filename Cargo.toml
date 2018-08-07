@@ -1,0 +1,29 @@
+[package]
+name = "xori"
+version = "0.0.1"
+authors = [ "amanda@endgame.com" ]
+
+[profile.release]
+debug = true
+
+[dependencies]
+nom = "4.0.0-beta2"
+num = "0.1"
+colored = "1.6.0"
+memmap = "0.6.2"
+serde_json = "1.0"
+serde = "1.0"
+serde_derive = "1.0"
+argparse = "0.2.1"
+bincode = "1.0.0"
+encoding = "0.2.33"
+reqwest = "0.8.5"
+url = "1.7.0"
+pdb = "0.2.0"
+base64 = "0.9.1"
+uuid = { version = "0.6", features = ["v4"] }
+regex = "1"
+itertools = "0.7.8"
+glob = "0.2"
+crc = "^1.0.0"
+flate2 = { version = "1.0", features = ["zlib"], default-features = false }

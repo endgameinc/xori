@@ -1,0 +1,112 @@
+:root {
+  --header-height: 50px;
+  --title-color: #B5BBC7;
+  --app-color-primary: #a75ac4;
+  --app-background-color: rgba(#2a2a2a, 0.85);
+  --app-background-color-light: #363443;
+  --app-divider-color: #2f2f2f;
+  --disassembly-text-color: #dfdfdf;
+  --detail-text-color: #68CEB8;
+  --basic-block-background: #2C2A35;
+  --basic-block-outline: #B6BDC5;
+  --positive-link-color: #26A99C;
+  --negative-link-color: #DD4240;
+  --disassembly-address-color: #5d6069;
+  --panel-background: #2C2A35;
+  --unselected-function: #77787D;
+  --cool-ass-gradient: linear-gradient(to left, #e66465, #9198e5);
+  --instruction-call: #9198e5;
+  --instruction-mov: #db9e7f;
+  --instruction-logic: #d04244;
+  --instruction-math: #6dcdbb;
+}
+@import url('https://fonts.googleapis.com/css?family=IBM+Plex+Mono|Roboto+Mono');
+main {
+  height: 100%;
+}
+
+.App {
+  text-align: left;
+  height: 100vh;
+  width: 100%;
+  background: radial-gradient(#363443, #29282d 78%);
+}
+
+.App-logo {
+  height: 40px;
+  padding: 20px;
+  padding-right: 10px;
+}
+
+.App-header {
+  position: relative;
+  top: 0px;
+  background-color: var(--app-background-color);
+  height: var(--header-height);
+  padding: 10px;
+  padding-bottom: 0px;
+  padding-top: 0px;
+  color: white;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  border-bottom: 1px solid var(--title-color);
+  width: 100%;
+}
+
+.App-title {
+  font-family: "Helvetica";
+  font-size: 1.75em;
+  padding: 20px;
+  padding-left: 0px;
+  font-weight: 400;
+  color: var(--app-background-color);
+}
+
+.App-intro {
+  font-size: large;
+}
+
+nav, nav ul {
+  width: 100%;
+  height: 100%;
+}
+
+nav ul {
+  list-style: none;
+  text-align: center;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  align-content: space-between;
+  justify-content: flex-end;
+}
+
+nav li {
+  max-width: 100px;
+  height: 100%;
+}
+
+nav a {
+  line-height: 60px;
+  font-size: 0.8em;
+  text-decoration: none;
+  color: var(--title-color);
+  font-weight: 500;
+  font-family: "Helvetica";
+  display: block;
+  transition: .3s black;
+  width: 100px;
+  height: 100%;
+}
+
+nav a:hover {
+  background-color: var(--app-color-primary);
+}
+
+nav a.active {
+  background-color: #fff;
+  color: #444;
+  cursor: default;
+}

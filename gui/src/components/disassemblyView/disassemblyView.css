@@ -1,0 +1,67 @@
+.DisassemblyView{
+  height: 100%;
+}
+.row {
+  display: flex;
+  height: 100%;
+}
+
+.col {
+  flex: 1;
+  padding: 1em;
+  border: solid;
+}
+
+.bottombar{
+  font-family: 'Roboto Mono', monospace;
+  font-weight: bold;
+  position: fixed;
+  padding-top: 4px;
+  bottom: 0px;
+  right: 0px;
+  height: 20px;
+  width: 20%;
+  background: linear-gradient(to left, #e66465, #9198e5);
+  font-size: 12px;
+  border-radius: 3px;
+  border: 1px;
+}
+
+.bottombar ul{
+  display: flex;
+  flex-direction: row;
+  list-style-type: none;
+  align-items: center;
+  padding: 0px;
+  margin: 0px;
+  outline: none;
+}
+.bottombar li{
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  height: 100%;
+  justify-content: center;
+  text-align: center;
+  cursor: pointer;
+
+}
+.bottombar li:hover{
+  background-color: var(--app-color-primary);
+}
+
+/* loader css*/
+.loader {
+    margin:  50px auto;
+    border: 16px solid rgba(157, 108, 170, 0.43);
+    border-top: 16px solid var(--app-color-primary);
+    border-radius: 50%;
+    width: 200px;
+    height: 200px;
+    animation: spin .75s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

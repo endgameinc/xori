@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["PrefixFlagsx86","Prefix flags."],["PrefixMaskx86","Prefix masks."],["VexExType","Vex Extention Type."],["VexPrefixx86","Vex prefix code values for the VEX pp (implied legacy prefix) field and EVEX.pp."]],"fn":[["prefix_read","Track all the prefixes"]]});

@@ -1,0 +1,52 @@
+.Splash {
+  color: whitesmoke;
+  padding: 20px;
+}
+
+.fileDropZone{
+  height: 300px;
+  width: 100%;
+  border-width: 1px;
+  border-style: solid;
+  border-color: var(--app-color-primary);
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.credits{
+  border-top: 2px solid var(--app-color-primary);
+  position: fixed;
+  height: 120px;
+  bottom: 0px;
+  width: 100%;
+  left: 0px;
+  padding: 5px;
+  background-color: rgb(28, 28, 28);
+  color: rgb(88, 88, 88);
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+}
+.centerCallout{
+  text-align: center;
+}
+.bottomRight{
+  font-size: 10px;
+  align-self: center;
+  text-align: left;
+}
+.bottomLeft{
+  align-self: center;
+  float: right;
+  text-align: right;
+}
+.credits .EndgameInc {
+  color: #d1331d;
+  text-decoration: none;
+}
+.credits .peoplelinks{
+  color:var(--app-color-primary);
+  text-decoration: none;
+}

@@ -1,0 +1,94 @@
+.LinearDisassemblyView {
+  font-family: Source Code Pro, Ubuntu, Courier New, Consolas, Sans;
+  width: 100%;
+  max-height: 100%;
+  min-height: 300px;
+}
+
+.LinearDisassemblyView .ReactVirtualized__List::-webkit-scrollbar-track
+{
+  
+  background-color: var(--basic-block-background);
+}
+
+.LinearDisassemblyView .ReactVirtualized__List::-webkit-scrollbar
+{
+  width: 10px;
+  background-color: var(--app-color-primary);
+}
+
+.LinearDisassemblyView .ReactVirtualized__List::-webkit-scrollbar-thumb
+{
+  background-color: var(--app-color-primary);
+}
+
+.LinearDisassemblyView li .address {
+
+  color: var(--disassembly-address-color);
+  opacity: 0.9;
+}
+
+.LinearDisassemblyView li .detail {
+  display: inline-block;
+  font-size: 12px;
+  white-space: pre;
+  width: 300px; 
+  color: var(--detail-text-color);
+  overflow: hidden;
+}
+
+.LinearDisassemblyView li .mnemonic {
+  display: inline-block;
+  text-align: right;
+  width: 150px;
+  color: var(--disassembly-text-color);
+}
+
+.LinearDisassemblyView li .call {
+  width: 150px;
+  display: inline-block;
+  text-align: right;
+  color: var(--instruction-call);
+}
+
+.LinearDisassemblyView li .mov {
+  width: 150px;
+  display: inline-block;
+  text-align: right;
+  color: var(--instruction-mov);
+}
+
+.LinearDisassemblyView li .logic {
+  width: 150px;
+  display: inline-block;
+  text-align: right;
+  color: var(--instruction-logic);
+}
+
+.LinearDisassemblyView li .math {
+  width: 150px;
+  display: inline-block;
+  text-align: right;
+  color: var(--instruction-math);
+}
+
+.LinearDisassemblyView li .op_str {
+  display: inline-block;
+  color: var(--disassembly-text-color)
+}
+
+.LinearDisassemblyView li .bytes {
+  white-space: pre;
+  color: var(--disassembly-text-color);
+  opacity: 0.6;
+}
+
+.LinearDisassemblyView li {
+  border-left: 8px inset rgba(0, 0, 0, 0);
+  list-style-type: none;
+}
+
+li.selectedInstruction {
+  background-color: #424242;
+  border-left: 8px inset var(--app-color-primary);
+}

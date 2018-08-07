@@ -1,0 +1,38 @@
+{
+	"x86": 
+	{
+		"stack_address": 2097152,
+		"stack_size": 2097152,
+		"start_address": 0,
+		"entry_point": 0,
+		"emulation_enabled": false,
+		"loop_default_case": 8000,
+		"flirt_enabled": true,
+		"pe_file":
+		{
+			"dll_address32": 1691680768,
+			"dll_address64": 8789194768384,
+			"teb_address32": 2147328000,
+			"teb_address64": 8796092866560,
+			"peb_address32": 2147348480,
+			"peb_address64": 8796092887040,
+			"function_symbol32": "./src/analysis/symbols/generated_user_syswow64.json",
+			"function_symbol64": "./src/analysis/symbols/generated_user_system32.json",
+			"flirt_pat_glob32": "./FLIRTDB/vcruntime/windows/*_x86.pat",
+			"flirt_pat_glob64": "./FLIRTDB/vcruntime/windows/*_x64.pat",
+			"symbol_server": {
+				"url": "http://msdl.microsoft.com/download/symbols/",
+				"user_agent": "Microsoft-Symbol-Server/10.0.10522.521",
+				"dll_folder32": "./dlls/32bit",
+				"dll_folder64": "./dlls/64bit"
+			}
+		},
+		"output":
+		{
+			"functions": true,
+			"disassembly": false,
+			"disasm_json": true,
+			"imports": true
+		}
+	}
+}

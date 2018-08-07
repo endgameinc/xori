@@ -1,0 +1,1 @@
+initSidebarItems({"constant":[["MAX_LOOPS",""],["STACK_ADDRESS",""]],"enum":[["BinaryType",""]],"fn":[["analyze","This is the main function that analyzes the binary based on type. NOTE: Only x86 Binary and PEs are supported."]],"struct":[["Analysis",""],["FuncInfo",""],["Header",""],["Jump",""]]});

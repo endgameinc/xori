@@ -1,0 +1,58 @@
+.FunctionsListView {
+  background-color: var(--panel-background);
+  padding-right: 5px;
+  border-right: 1px inset rgb(27, 27, 27);
+  color: var(--unselected-function);
+  width: 150px;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  height: calc(100vh - 40px);
+}
+
+.FunctionsListView::-webkit-scrollbar-track
+{
+
+  background-color: var(--panel-background);
+}
+
+.FunctionsListView::-webkit-scrollbar {
+  width: 6px;
+  background-color: var(--app-color-primary);
+}
+
+.FunctionsListView::-webkit-scrollbar-thumb {
+  background-color: var(--app-color-primary);
+}
+
+.FunctionsListView ul {
+  list-style: none;
+  margin-left: 0px;
+  padding: 0px;
+  width: 100%;
+  margin-top: 0px;
+  margin-right: 10px;
+  outline: none;
+}
+
+.FunctionsListView li {
+  padding: 5px 1px 2.5px 10px;
+  cursor: pointer;
+  width: 100%;
+  font-family: 'Roboto Mono', monospace;
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.FunctionsListView li:hover {
+  background-color: var(--app-color-primary);
+  border-left: 8px inset var(--app-color-primary);
+  padding-left: 2px;
+  color: white;
+}
+
+.FunctionsListView .is-selected {
+  background-color: var(--app-color-primary);
+  border-left: 8px inset var(--app-color-primary);
+  padding-left: 2px;
+  color: white;
+}

@@ -1,0 +1,107 @@
+
+
+.CFGView {
+  overflow: scroll;
+  width: 100%;
+  height: 100%;
+}
+
+.CFGView::-webkit-scrollbar-track
+{
+  
+  background-color: var(--basic-block-background);
+}
+
+.CFGView::-webkit-scrollbar
+{
+  width: 6px;
+  background-color: var(--app-color-primary);
+}
+
+.CFGView::-webkit-scrollbar-thumb
+{
+  background-color: var(--app-color-primary);
+}
+
+.node div, text {
+  font-family: 'Roboto Mono', Source Code Pro, Ubuntu, Courier New, Consolas, Sans;
+}
+
+.node div {
+  padding: none;
+}
+
+.node div .firstBasicBlockHeader{
+  font-weight: 400;
+  background-color: none;
+  height: 12px;
+  padding: 5px;
+  margin: none;
+  width: 90%;
+  color: var(--app-color-primary);
+}
+.node div .address {
+  color: var(--disassembly-address-color);
+}
+
+.node div .detail {
+  font-size: 12px;
+  color: var(--detail-text-color);
+}
+
+.node div .mnemonic {
+  text-align: right;
+  color: var(--disassembly-text-color);
+}
+
+.node div .call {
+  text-align: right;
+  color: var(--instruction-call);
+}
+
+.node div .mov {
+  text-align: right;
+  color: var(--instruction-mov);
+}
+
+.node div .logic {
+  text-align: right;
+  color: var(--instruction-logic);
+}
+
+.node div .math {
+  text-align: right;
+  color: var(--instruction-math);
+}
+
+.node div .op_str {
+  color: var(--disassembly-text-color)
+}
+
+.node rect {
+  padding: none;
+  fill: url(#linear-gradient);
+  stroke-width: 1px;
+  stroke: var(--basic-block-outline);
+}
+
+.node-info {
+  list-style: none;
+  padding: none;
+}
+
+.edgePath .path {
+  fill: none;
+  stroke-width: 5px;
+}
+
+.edgePath marker {
+  fill: black;
+  stroke-width: 1px;
+}
+
+.edgeLabel tspan {
+  font-size: 12px;
+  font-weight: bold;
+  fill: var(--basic-block-background);
+}

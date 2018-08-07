@@ -1,0 +1,57 @@
+.InfoView {
+  font-family: 'Roboto Mono', Source Code Pro, Ubuntu, Courier New, Consolas, Sans;
+  font-size: 12px;
+  width: 100%;
+  color: var(--disassembly-text-color);
+  height: 100%;
+  overflow-y: scroll;
+}
+.InfoView::-webkit-scrollbar-track
+{
+  
+  background-color: var(--basic-block-background);
+}
+
+.InfoView::-webkit-scrollbar
+{
+  width: 10px;
+  background-color: var(--app-color-primary);
+}
+
+.InfoView::-webkit-scrollbar-thumb
+{
+  background-color: var(--app-color-primary);
+}
+
+.InfoView .InfoContent{
+  min-height: 100%;
+  width: 100%;
+  background: none;
+  padding-bottom: 50px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+}
+.InfoView .card{
+  min-width: 800px;
+  /* flex-grow: 1; */
+  padding: 0px;
+  padding-bottom: 0px;
+  margin: 20px;
+}
+
+
+.InfoView ul {
+  list-style-type: none;
+  width: 100%;
+  padding-bottom: 50px;
+}
+
+.InfoView li .label{
+  font-family: "Helvetica", Sans;
+  color: var(--title-color);
+  display: inline-block;
+  text-decoration: none;
+  width: 80px;
+}
