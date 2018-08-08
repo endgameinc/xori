@@ -41,7 +41,7 @@ What it doesn't do yet:
 ## [Documentation](doc/xori/)
 
 ## Requirements
-rustc 1.27.0+
+rustc 1.27.0
 
 ### Install rust for OSX & Linux Distros
 
@@ -64,6 +64,8 @@ Select:
 This command will also create other binaries such as pesymbols ans peinfo.
 
 ```
+git clone https://github.com/endgameinc/xori.git
+cd xori
 cargo build --release
 ```
 
