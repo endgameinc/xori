@@ -1,13 +1,12 @@
 .LinearDisassemblyView {
   font-family: Source Code Pro, Ubuntu, Courier New, Consolas, Sans;
   width: 100%;
-  max-height: 100%;
-  min-height: 300px;
+  height: calc(100vh - 75px);
 }
 
 .LinearDisassemblyView .ReactVirtualized__List::-webkit-scrollbar-track
 {
-  
+
   background-color: var(--basic-block-background);
 }
 
@@ -26,13 +25,14 @@
 
   color: var(--disassembly-address-color);
   opacity: 0.9;
+  cursor: pointer;
 }
 
 .LinearDisassemblyView li .detail {
   display: inline-block;
   font-size: 12px;
   white-space: pre;
-  width: 300px; 
+  width: auto;
   color: var(--detail-text-color);
   overflow: hidden;
 }
@@ -40,33 +40,33 @@
 .LinearDisassemblyView li .mnemonic {
   display: inline-block;
   text-align: right;
-  width: 150px;
+  width: 10%;
   color: var(--disassembly-text-color);
 }
 
 .LinearDisassemblyView li .call {
-  width: 150px;
+  width: 10%;
   display: inline-block;
   text-align: right;
   color: var(--instruction-call);
 }
 
 .LinearDisassemblyView li .mov {
-  width: 150px;
+  width: 10%;
   display: inline-block;
   text-align: right;
   color: var(--instruction-mov);
 }
 
 .LinearDisassemblyView li .logic {
-  width: 150px;
+  width: 10%;
   display: inline-block;
   text-align: right;
   color: var(--instruction-logic);
 }
 
 .LinearDisassemblyView li .math {
-  width: 150px;
+  width: 10%;
   display: inline-block;
   text-align: right;
   color: var(--instruction-math);
@@ -82,10 +82,17 @@
   color: var(--disassembly-text-color);
   opacity: 0.6;
 }
+@media only screen and (max-width: 800px){
+  .LinearDisassemblyView li .bytes {
+    display: none;
+  }
+}
 
 .LinearDisassemblyView li {
   border-left: 8px inset rgba(0, 0, 0, 0);
   list-style-type: none;
+  overflow-x: hidden;
+  display: block;
 }
 
 li.selectedInstruction {

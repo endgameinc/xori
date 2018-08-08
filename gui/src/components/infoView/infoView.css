@@ -8,7 +8,7 @@
 }
 .InfoView::-webkit-scrollbar-track
 {
-  
+
   background-color: var(--basic-block-background);
 }
 
@@ -34,8 +34,7 @@
   align-items: center;
 }
 .InfoView .card{
-  min-width: 800px;
-  /* flex-grow: 1; */
+  min-width: 60%;
   padding: 0px;
   padding-bottom: 0px;
   margin: 20px;

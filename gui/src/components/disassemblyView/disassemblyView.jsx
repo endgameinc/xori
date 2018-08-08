@@ -32,26 +32,23 @@ class DisassemblyView extends Component {
           debugger;
           return;
         }
-        var AllFunctions = jsonTransform(result.disasm, result.functions, this.state.selectedFunction);
-        var funcData = AllFunctions[this.state.selectedFunction];
-
+        var allFunctions = jsonTransform(result.disasm, result.functions, this.state.selectedFunction);
+        var funcData = allFunctions[this.state.selectedFunction];
         if (this.state.selectedFunction === undefined || this.state.selectedFunction === "EntryPoint") {
-            funcData = AllFunctions[result.functions.find(function(descriptor) {
+            funcData = allFunctions[result.functions.find(function(descriptor) {
               return descriptor.name === 'EntryPoint'
             }).address];
         }
-        //console.log(funcData);
-        var temp_graph = graphify(funcData);
-        //var temp_graph = graphify(jsonTransform(result.disasm, result.functions, this.state.selectedFunction))
-        var temp_functions = [];
-        temp_functions = result.functions.filter((func) => {
+        var tempGraph = graphify(funcData);
+        var tempFunctions = [];
+        tempFunctions = result.functions.filter((func) => {
           return func.mem_type === "Image"
         })
         const entryPoint = result.functions[0]
         this.setState({
-          graph: temp_graph,
-          functions: temp_functions,
-          allFunctions: AllFunctions,
+          graph: tempGraph,
+          functions: tempFunctions,
+          allFunctions: allFunctions,
           disasm: result.disasm,
           selectedFunction: entryPoint,
           info: result.info
@@ -65,9 +62,7 @@ class DisassemblyView extends Component {
     }
   }
   functionsListChangeHandler(func) {
-
     var funcData = this.state.allFunctions[this.state.functions[func].address];
-    //console.log(this.state.functions[func]);
     this.setState({
       selectedFunction: this.state.functions[func],
       graph: graphify(funcData)
@@ -77,17 +72,24 @@ class DisassemblyView extends Component {
     }
   }
   functionByAddress(address) {
-    const {functions} = this.state
-    return functions.find()
-
+    var report = undefined
+    this.state.functions.forEach( (f) => {
+      if(address == f.address){
+        report = f;
+      }
+    })
+    return report;
   }
-  userSelectedFunctionHandler(functionAddress, hexAddress) {
-    const ordinalAddress = Number.parseInt(hexAddress, 10)
-    this.setState({selectedFunction: this.functionByAddress(ordinalAddress)})
-    console.log("Called userSelectedFunctionHandler");
-    console.log("functionAddress: ", functionAddress);
-    console.log("selectedAddress: ", hexAddress);
-    console.log(this.state.functions.indexOf(functionAddress));
+  userSelectedFunctionHandler(ownedFunctionAddress,ordinalInstructionAddress) {
+    const tempSelectedFunction = this.functionByAddress(ownedFunctionAddress);
+    if(tempSelectedFunction === undefined){
+      alert(`Instruction does not belong to any known function.`);
+      return;
+    }
+    this.setState({
+      selectedFunction: tempSelectedFunction,
+      graph: graphify(this.state.allFunctions[tempSelectedFunction.address]),
+      })
   }
   handleViewSelection(selected) {
     this.setState({selectedView: this.avaliableViews[selected]})
@@ -95,10 +97,9 @@ class DisassemblyView extends Component {
   render() {
 
     if (!this.state.graph) {
-      return ( //
+      return (
           <div className="loader"></div>)
     } else {
-      // FIXME: do this in the router instead and add redux or sm. yolo
       var viewToRender = undefined;
       if (this.state.selectedView === "Graph") {
         viewToRender = (<CFGView graph={this.state.graph} selectedFunction={this.state.selectedFunction}/>)
@@ -109,16 +110,17 @@ class DisassemblyView extends Component {
           <LinearDisassemblyView
             selectedFunction={this.state.selectedFunction}
             disassembly={this.state.disasm}
+            onChange={this.userSelectedFunctionHandler.bind(this)}
           />
         )
       }
       return (
-          <div className="DisassemblyView">            
-            <div className="row">             
+          <div className="DisassemblyView">
+            <div className="row">
               <FunctionsListView
-                className="col"
                 functions={this.state.functions}
                 onChange={this.functionsListChangeHandler.bind(this)}
+                selectedFunction={this.state.selectedFunction}
               />
               {viewToRender}
             </div>

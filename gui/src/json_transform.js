@@ -29,7 +29,7 @@ export default function(instructionDescriptors , functionDescriptors , selectedF
 
     functionDescriptors.forEach(function (func) {
       func.xrefs.forEach(function (xref) {
-        
+
           xrefs[xref] = func.address
       });
     });
@@ -68,7 +68,7 @@ export default function(instructionDescriptors , functionDescriptors , selectedF
     /* Get all the Jumps */
     if (Object.keys(functionDescriptor.jumps).length > 0) {
       for (const [key, jump] of Object.entries(functionDescriptor.jumps)) {
-        
+
         if (key in blockSeparators)
         {
           if (blockSeparators[key][0] === blockStart || blockSeparators[key][0] === blockBegin) {
@@ -78,7 +78,7 @@ export default function(instructionDescriptors , functionDescriptors , selectedF
             blockSeparators[key][2] = jump.right
           }
         } else {
-          
+
           blockSeparators[key] = [blockEnd, jump.left, jump.right]
         }
 
@@ -99,7 +99,7 @@ export default function(instructionDescriptors , functionDescriptors , selectedF
             }
           } else {
             blockSeparators[jump.right] = [blockBegin, 0, 0]
-            
+
             const indexOfJumpRight = instructionAddresses.indexOf(jump.right.toString())
             if (indexOfJumpRight - 1 > 0) {
               const previousInstr = parseInt(instructionAddresses[indexOfJumpRight - 1], 10)
@@ -119,7 +119,7 @@ export default function(instructionDescriptors , functionDescriptors , selectedF
         /* End jump right */
       }
     }
-    
+
     const blockSeparatorKeys = Object.keys(blockSeparators).sort()
     let index = 0
     while (index < blockSeparatorKeys.length) {
@@ -213,7 +213,7 @@ export default function(instructionDescriptors , functionDescriptors , selectedF
           index = index + 1
           continue
         }
-      
+
         index = index + 2
         continue
       } else if (blockSeparators[blockSeparatorKeys[index]][0] === blockEnd) {

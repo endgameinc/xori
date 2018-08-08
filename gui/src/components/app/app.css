@@ -110,3 +110,6 @@ nav a.active {
   color: #444;
   cursor: default;
 }
+*{
+  outline: none;
+}

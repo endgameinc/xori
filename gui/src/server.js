@@ -16,7 +16,6 @@ const dynamic_storage_path = path.normalize(__dirname + "/../dynamic")
 const xori_executable_path = path.normalize("./target/release/xori")
 const xori_config_path = path.normalize("./xori.json")
 console.log("XORI Executable path: " + xori_executable_path);
-//console.log("XORI Config path: " + xori_config_path);
 console.log("Dynamic storage path: " + dynamic_storage_path);
 
 var upload = multer({
@@ -54,7 +53,6 @@ app.post('/disassemble-file', upload.single('fileToDisassemble'), function(req, 
   const xori_instance = spawn(xori_executable_path, ["-f", req.file.path, "--config", xori_config_path, "--output", output_path], {cwd: '../'})
   // Setup event handlers to listen to subproces events
   xori_instance.stdout.on('data', (data) => {
-    // console.log("Xori output: ", data.toString());
   })
   xori_instance.stderr.on('data', (data) => {
     console.log("Xori Error output: ", data.toString());
@@ -72,7 +70,8 @@ app.post('/disassemble-file', upload.single('fileToDisassemble'), function(req, 
     didReceiveFunctions = false,
     functionsObject = undefined,
     didReceiveHeader = false,
-    headerObject = undefined;
+    headerObject = undefined,
+    didXoriExit = false;
 
   watcher
     .on('add', (new_file_path) => {
@@ -100,7 +99,6 @@ app.post('/disassemble-file', upload.single('fileToDisassemble'), function(req, 
           "functions": functionsObject,
           "info": headerObject
         }
-        // console.log(response);
         // send created response
         res.json(response);
         // Cleanup the job

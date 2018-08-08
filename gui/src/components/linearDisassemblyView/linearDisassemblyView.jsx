@@ -14,6 +14,7 @@ class LinearDisassemblyView extends PureComponent {
   render() {
     const { selectedFunction, disassembly } = this.props
     const disassemblyEntries = Object.entries(disassembly)
+    const LDVReference = this;
     return (
         <div className="LinearDisassemblyView" ref="scrolling_div">
           <AutoSizer>
@@ -41,19 +42,20 @@ class LinearDisassemblyView extends PureComponent {
         })
       }
     }
-    function rowRenderer({
+   function rowRenderer({
       index,       // Index of row
       isScrolling, // The List is currently being scrolled
       isVisible,   // This row is visible within the List (eg it is not an overscanned row)
       key,         // Unique key within array of rendered rows
       parent,      // Reference to the parent List (instance)
-      style   
+      style
     }) {
 
       const entry = disassemblyEntries[index]
       var id = entry[0]
       var instruction = entry[1]
       var hex_addr = ordinalAddressToHexAddress(instruction.instr.address)
+
       return (
         <li
           key={key}
@@ -64,7 +66,9 @@ class LinearDisassemblyView extends PureComponent {
             })
           }
         >
-          <span className="address" ref={hex_addr}>{hex_addr}:</span>
+          <span className="address" onClick={()=>{
+              LDVReference.props.onChange(entry[1].owned,entry[1].address)
+            }}>{hex_addr}:</span>
           &emsp;
           <span className="bytes">
             {instruction.instr.bytes.slice(0,8).reduce((report, current) => report + " " + current.toString(16).padStart(2, "0"), "")}

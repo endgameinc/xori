@@ -6,12 +6,6 @@
   height: 100%;
 }
 
-.col {
-  flex: 1;
-  padding: 1em;
-  border: solid;
-}
-
 .bottombar{
   font-family: 'Roboto Mono', monospace;
   font-weight: bold;
