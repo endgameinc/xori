@@ -69,8 +69,14 @@ cd xori
 cargo build --release
 ```
 
+## 2. Create xori.json config file
 
-## 2. (Optional) Build the symbols files
+```
+cp xori.json.example xori.json
+[edit if desired]
+```
+
+## 3. (Optional) Build the symbols files
 
 If you want to create your own symbol files you need to set the dll folders to where you stored your windows dlls. 
 
