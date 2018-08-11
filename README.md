@@ -115,8 +115,10 @@ Latest ✔ | Latest ✔ | Latest ✔ | x | Latest ✔ |
 ## Requirements
 
 nodejs
+
 yarn (optional for UI dev)
 
+- On Ubuntu 18.04 you may need to apt install the following: `curl git libssl-dev pkg-config build-essential npm`
 
 ## Build
 
