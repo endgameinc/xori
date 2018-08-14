@@ -84,7 +84,7 @@ run the _rustup.exe_ & you will see the following output
 after the successful installation you can see that the rust compiler **rustc**, rust package manager **cargo** and other tools were installed (under `C:\Users\%username%\.cargo` & `C:\Users\%username%\.rustup`)
 ![Screenshoot about rustup installation](readme-assests/rust-on-win.06.png "Install rust toolchain")
 
-* open a new "Command Prompt" & follow the **xori** build steps [here](#1.-build-xori)
+* open a new "Command Prompt" & follow the **xori** build steps [here](#1-build-xori)
 
 # Installation
 
