@@ -53,13 +53,14 @@ curl https://sh.rustup.rs -sSf | sh
 
 First get the _rustup.exe_ (the rust toolchain installer) from [here](https://www.rust-lang.org/en-US/other-installers.html#other-ways-to-install-rustup).
 ![Screenshoot about rustup installation](readme-assests/rust-on-win.01.png "Install rustup.exe")
+
 This tool will install the rust compiler **rustc**, the rust package manager **cargo** and other usefull tools for development in rust.
 
 * run the _rustup.exe_
 
 #### Install rust prerequisites
 
-in case you see this output, your Windows environment is missing the **Build Tools for Visual Studio** so keep reading, otherwise go [here](####install-rust-toolchain)
+in case you see this output, your Windows environment is missing the **Build Tools for Visual Studio** so keep reading, otherwise go [here](#install-rust-toolchain)
 ![Screenshoot about missing prerequisites](readme-assests/rust-on-win.02.png "Run rustup.exe")
 
 * follow the link from the output, or click [here](https://aka.ms/buildtools)
@@ -83,7 +84,7 @@ run the _rustup.exe_ & you will see the following output
 after the successful installation you can see that the rust compiler **rustc**, rust package manager **cargo** and other tools were installed (under `C:\Users\%username%\.cargo` & `C:\Users\%username%\.rustup`)
 ![Screenshoot about rustup installation](readme-assests/rust-on-win.06.png "Install rust toolchain")
 
-* open a new "Command Prompt" & follow the **xori** build steps [here](##1.-build-xori)
+* open a new "Command Prompt" & follow the **xori** build steps [here](#1.-build-xori)
 
 # Installation
 
