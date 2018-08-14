@@ -110,13 +110,16 @@ app.post('/disassemble-file', upload.single('fileToDisassemble'), function(req, 
 
         // move job file into created job folder reports/md5hash/md5hash_uuid
         var job_destination_path = path.normalize(output_path + "/" + md5_hash + "_" + req.file.filename)
-        mv(req.file.path, job_destination_path, {
-          mkdirp: true
-        }, function(error) {
-          if (error) {
-            console.log("error:", error)
-          }
-        })
+        if (job_destination_path.startsWith(path.resolve(output_path))) {
+          mv(req.file.path, job_destination_path, {
+            mkdirp: true
+          }, function(error) {
+            if (error) {
+              console.log("error:", error)
+            }
+          })
+        }
+        console.log('error: invalid filename', req.file.filename)
       }
     });
 })
