@@ -125,8 +125,8 @@ impl Header
     }
     fn identify(&mut self, binary: &mut [u8])->BinaryType{
     
-        let test_elf = &binary[0..4];
-        if test_elf.eq(b"\x7f\x45\x4c\x46")
+        let test_elf = &binary[0..7];
+        if test_elf.eq(b"\x7f\x45\x4c\x46\x02\x02\x01")
         {
             self.binary_type = BinaryType::ELF;
             return BinaryType::ELF;
