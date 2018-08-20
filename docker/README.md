@@ -2,6 +2,8 @@
 
 ## Start
 
+_Please note this will only work with docker locally due to hardcoded references to localhost at the moment._
+
 Simply start with `docker-compose up -d`, then access Xori via http://localhost:3000.
 
 ## About
