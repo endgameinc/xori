@@ -51,11 +51,40 @@ curl https://sh.rustup.rs -sSf | sh
 
 ### Install rust for Windows
 
-https://www.rust-lang.org/en-US/other-installers.html
+First get the _rustup.exe_ (the rust toolchain installer) from [here](https://www.rust-lang.org/en-US/other-installers.html#other-ways-to-install-rustup).
+![Screenshoot about rustup installation](readme-assests/rust-on-win.01.png "Install rustup.exe")
 
-Select: 
-* x86_64-pc-windows-gnu or 
-* x86_64-pc-windows-msvc (Visual Studio Build Tools Required)
+This tool will install the rust compiler **rustc**, the rust package manager **cargo** and other usefull tools for development in rust.
+
+* run the _rustup.exe_
+
+#### Install rust prerequisites
+
+in case you see this output, your Windows environment is missing the **Build Tools for Visual Studio** so keep reading, otherwise go [here](#install-rust-toolchain)
+![Screenshoot about missing prerequisites](readme-assests/rust-on-win.02.png "Run rustup.exe")
+
+* follow the link from the output, or click [here](https://aka.ms/buildtools)
+
+* cancel the _rustup-init.exe_
+
+* back in browser, scroll down, expand the tab **Tools for Visual Studio 2017** & download the **Build Tools for Visual Studio 2017**
+
+![Screenshoot about build tools installation](readme-assests/rust-on-win.03.png "Install build tools")
+
+* run the executable
+
+choose the **Visual C++ build tools** & click "install", close the "Visual Studio Installer" after the installation
+![Screenshoot about build tools installation](readme-assests/rust-on-win.04.png "Install build tools")
+
+#### Install rust toolchain
+
+run the _rustup.exe_ & you will see the following output
+![Screenshoot about rustup installation](readme-assests/rust-on-win.05.png "Install rust toolchain")
+
+after the successful installation you can see that the rust compiler **rustc**, rust package manager **cargo** and other tools were installed (under `C:\Users\%username%\.cargo` & `C:\Users\%username%\.rustup`)
+![Screenshoot about rustup installation](readme-assests/rust-on-win.06.png "Install rust toolchain")
+
+* open a new "Command Prompt" & follow the **xori** build steps [here](#1-build-xori)
 
 # Installation
 
