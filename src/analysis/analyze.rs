@@ -187,7 +187,6 @@ fn display_disassembly(analysis: &mut Analysisx86){
 // Only x86 for now
 fn disassemble_init(
     _arch: &Arch,
-    _mode: Mode,
     _header: Header,
     _binary: &mut [u8],
     _config: &Config) -> Option<Analysisx86>
@@ -488,7 +487,8 @@ fn disassemble_init(
 /// }
 /// ```   
 pub fn analyze(
-    arch: &Arch, 
+    arch: &Arch,
+    mode: &Mode, 
     binary: &mut [u8], 
     config: &Config) -> Option<Analysis>
 {
@@ -518,10 +518,10 @@ pub fn analyze(
             }
             debug!("Identified binary data");
             header.size_of_image = binary.len() as u64;
-            
+            header.mode = *mode;
+
             let some_analysis = disassemble_init(
                 arch, 
-                Mode::Mode32, 
                 header, 
                 binary, 
                 config);
@@ -578,8 +578,7 @@ pub fn analyze(
             // disassemble
             // default arch is x86
             let some_analysis = disassemble_init(
-                arch, 
-                Mode::Mode32, 
+                arch,
                 header, 
                 binary,
                 config);

@@ -26,6 +26,7 @@ fn main()
     let mut input_path: String = String::new();
     let mut output_path: String = String::new();
     let mut config_file: String = String::new();
+    let mut config_mode: String = String::new();
     let mut uuid_name: bool = false;
 
     {
@@ -43,6 +44,12 @@ fn main()
             &["--output", "-o"],
             Store,
             "path of the output json");
+
+        ap.refer(&mut config_mode)
+        .add_option(
+            &["--mode", "-m"],
+            Store,
+            "mode of the disassembly [ Mode16, Mode32, Mode64 ]");
 
         ap.refer(&mut config_file).add_option(
             &["--config", "-c"],
@@ -113,8 +120,15 @@ fn main()
         buffer = unsafe { MmapMut::map_mut(&file).expect("failed to map the file")};
     }
 
+    // Used for BIN only
+    let option_mode: Mode = match config_mode.as_str() {
+        "Mode16" => Mode::Mode16,
+        "Mode32" => Mode::Mode32,
+        "Mode64" => Mode::Mode64,
+        _=> Mode::Mode32, //Default
+    };
 
-    match analyze(&Arch::ArchX86, &mut buffer, &config_map)
+    match analyze(&Arch::ArchX86, &option_mode, &mut buffer, &config_map)
     {
         Some(analysis)=>{
             
