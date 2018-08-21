@@ -97,6 +97,7 @@ pub struct SigAnalyzer
 {
     pub signatures: BTreeMap<String, Vec<&'static str>>,
     pub flirts: BTreeMap<String, FlirtSignature>,
+    full_signatures_regex: Regex
 }
 
 impl SigAnalyzer
@@ -104,7 +105,8 @@ impl SigAnalyzer
     pub fn new()->SigAnalyzer {
         SigAnalyzer{
             signatures: BTreeMap::new(),
-            flirts: BTreeMap::new()
+            flirts: BTreeMap::new(),
+            full_signatures_regex: Regex::new("").unwrap()
         }
     }
     pub fn init(&mut self, cfg: &Config, arch: &Arch, mode: &Mode)
@@ -137,6 +139,22 @@ impl SigAnalyzer
                     },
                     _=>{},
                 };
+
+                // now precompile the list of all signatures
+                let mut regex = r"(?-u)".to_string();
+
+                for (name, sigs) in self.signatures.iter() {
+                    regex += &format!("(?P<{}>",name);
+                    for (i, sig) in sigs.iter().enumerate() {
+                        if sigs.len() == i + 1 {
+                            regex += &format!("{})|", sig);
+                        } else {
+                            regex += &format!("{}|", sig);
+                        }
+                    }
+                }
+                regex = regex.trim_right_matches("|").to_string();
+                self.full_signatures_regex = Regex::new(&regex).unwrap();
             },
             _=>{},
         }
@@ -267,24 +285,10 @@ impl SigAnalyzer
     pub fn match_bytes(&self, bytes:&[u8])-> BTreeMap<String,Vec<usize>>
     {
         let mut sig_to_offsets = BTreeMap::new();
-        let mut regex = r"(?-u)".to_string();
-
-        for (name, sigs) in self.signatures.iter() {
-            regex += &format!("(?P<{}>",name);
-            for (i, sig) in sigs.iter().enumerate() {
-                if sigs.len() == i + 1 {
-                    regex += &format!("{})|", sig);
-                } else {
-                    regex += &format!("{}|", sig);
-                }
-            }
-        }
-        regex = regex.trim_right_matches("|").to_string();
         for (k, _v) in self.signatures.iter() {
             sig_to_offsets.insert(k.to_string(),vec![]);
         }
-        let re = Regex::new(&regex).unwrap();
-        for cap in re.captures_iter(&bytes) {
+        for cap in self.full_signatures_regex.captures_iter(&bytes) {
             for (k, _v) in self.signatures.iter() {
                 match cap.name(k) {
                     Some(m) => {sig_to_offsets.entry(k.to_string()).and_modify(|v| {v.push(m.start())});},
