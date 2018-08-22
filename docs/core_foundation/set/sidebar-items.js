@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["CFSetCreate",""],["CFSetGetTypeID",""]],"static":[["kCFTypeSetCallBacks",""]],"struct":[["CFSet","An immutable bag of elements."],["CFSetCallBacks",""],["__CFSet",""]],"type":[["CFSetCopyDescriptionCallBack",""],["CFSetEqualCallBack",""],["CFSetHashCallBack",""],["CFSetRef",""],["CFSetReleaseCallBack",""],["CFSetRetainCallBack",""]]});

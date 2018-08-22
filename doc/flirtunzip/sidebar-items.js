@@ -1,1 +1,0 @@
-initSidebarItems({"enum":[["IdaAppType",""],["IdaArchType",""],["IdaFileType",""],["IdaOsType",""]],"struct":[["FlirtSigHeader",""]]});

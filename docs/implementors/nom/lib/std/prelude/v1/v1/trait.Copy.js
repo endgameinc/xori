@@ -1,0 +1,10 @@
+(function() {var implementors = {};
+implementors["nom"] = [{text:"impl <a class=\"trait\" href=\"nom/lib/std/prelude/v1/v1/trait.Copy.html\" title=\"trait nom::lib::std::prelude::v1::v1::Copy\">Copy</a> for <a class=\"enum\" href=\"nom/enum.Needed.html\" title=\"enum nom::Needed\">Needed</a>",synthetic:false,types:["nom::internal::Needed"]},{text:"impl <a class=\"trait\" href=\"nom/lib/std/prelude/v1/v1/trait.Copy.html\" title=\"trait nom::lib::std::prelude::v1::v1::Copy\">Copy</a> for <a class=\"enum\" href=\"nom/enum.Endianness.html\" title=\"enum nom::Endianness\">Endianness</a>",synthetic:false,types:["nom::nom::Endianness"]},{text:"impl&lt;'a&gt; <a class=\"trait\" href=\"nom/lib/std/prelude/v1/v1/trait.Copy.html\" title=\"trait nom::lib::std::prelude::v1::v1::Copy\">Copy</a> for <a class=\"struct\" href=\"nom/types/struct.CompleteStr.html\" title=\"struct nom::types::CompleteStr\">CompleteStr</a>&lt;'a&gt;",synthetic:false,types:["nom::types::CompleteStr"]},{text:"impl&lt;'a&gt; <a class=\"trait\" href=\"nom/lib/std/prelude/v1/v1/trait.Copy.html\" title=\"trait nom::lib::std::prelude::v1::v1::Copy\">Copy</a> for <a class=\"struct\" href=\"nom/types/struct.CompleteByteSlice.html\" title=\"struct nom::types::CompleteByteSlice\">CompleteByteSlice</a>&lt;'a&gt;",synthetic:false,types:["nom::types::CompleteByteSlice"]},{text:"impl&lt;T:&nbsp;<a class=\"trait\" href=\"nom/lib/std/prelude/v1/v1/trait.Copy.html\" title=\"trait nom::lib::std::prelude::v1::v1::Copy\">Copy</a>&gt; <a class=\"trait\" href=\"nom/lib/std/prelude/v1/v1/trait.Copy.html\" title=\"trait nom::lib::std::prelude::v1::v1::Copy\">Copy</a> for <a class=\"struct\" href=\"nom/types/struct.Input.html\" title=\"struct nom::types::Input\">Input</a>&lt;T&gt;",synthetic:false,types:["nom::types::Input"]},];
+
+            if (window.register_implementors) {
+                window.register_implementors(implementors);
+            } else {
+                window.pending_implementors = implementors;
+            }
+        
+})()

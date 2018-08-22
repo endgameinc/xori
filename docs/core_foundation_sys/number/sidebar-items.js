@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["CFBooleanGetTypeID",""],["CFNumberCreate",""],["CFNumberGetTypeID",""],["CFNumberGetValue",""]],"static":[["kCFBooleanFalse",""],["kCFBooleanTrue",""],["kCFNumberFloat64Type",""],["kCFNumberSInt32Type",""],["kCFNumberSInt64Type",""]],"struct":[["__CFBoolean",""],["__CFNumber",""]],"type":[["CFBooleanRef",""],["CFNumberRef",""],["CFNumberType",""]]});
