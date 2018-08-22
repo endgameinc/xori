@@ -38,7 +38,7 @@ What it doesn't do yet:
 * No plugins or scripting.
 
 
-## [Documentation](doc/xori/)
+## [Documentation](https://endgameinc.github.io/xori/xori/)
 
 ## Requirements
 rustc 1.27.0
