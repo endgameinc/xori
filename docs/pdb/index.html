@@ -1,0 +1,543 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `pdb` crate."><meta name="keywords" content="rust, rustlang, rust-lang, pdb"><title>pdb - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../dark.css"><link rel="stylesheet" type="text/css" href="../light.css" id="themeStyle"><script src="../storage.js"></script></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><p class='location'>Crate pdb</p><div class="sidebar-elems"><div class="block items"><ul><li><a href="#reexports">Re-exports</a></li><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li><li><a href="#traits">Traits</a></li><li><a href="#types">Type Definitions</a></li></ul></div><p class='location'></p><script>window.sidebarCurrent = {name: 'pdb', ty: 'mod', relpath: '../'};</script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../theme.js"></script><nav class="sub"><form class="search-form js-only"><div class="search-container"><input class="search-input" name="search" autocomplete="off" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class='fqn'><span class='out-of-band'><span id='render-detail'><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class='inner'>&#x2212;</span>]</a></span><a class='srclink' href='../src/pdb/lib.rs.html#9-73' title='goto source code'>[src]</a></span><span class='in-band'>Crate <a class="mod" href=''>pdb</a></span></h1><div class='docblock'><p>The <code>pdb</code> create parses Microsoft PDB (Program Database) files. PDB files contain debugging
+information produced by most compilers that target Windows, including information about symbols,
+types, modules, and so on.</p>
+<h1 id="usage" class="section-header"><a href="#usage">Usage</a></h1>
+<p>PDB files are accessed via the <a href="struct.PDB.html"><code>pdb::PDB</code> object</a>.</p>
+<h1 id="example" class="section-header"><a href="#example">Example</a></h1>
+<pre class="rust rust-example-rendered">
+<span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">fs</span>::<span class="ident">File</span>::<span class="ident">open</span>(<span class="string">&quot;fixtures/self/foo.pdb&quot;</span>)<span class="question-mark">?</span>;
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">pdb</span> <span class="op">=</span> <span class="ident">pdb</span>::<span class="ident">PDB</span>::<span class="ident">open</span>(<span class="ident">file</span>)<span class="question-mark">?</span>;
+
+<span class="kw">let</span> <span class="ident">symbol_table</span> <span class="op">=</span> <span class="ident">pdb</span>.<span class="ident">global_symbols</span>()<span class="question-mark">?</span>;
+
+<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">symbols</span> <span class="op">=</span> <span class="ident">symbol_table</span>.<span class="ident">iter</span>();
+<span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">symbol</span>) <span class="op">=</span> <span class="ident">symbols</span>.<span class="ident">next</span>()<span class="question-mark">?</span> {
+    <span class="kw">match</span> <span class="ident">symbol</span>.<span class="ident">parse</span>() {
+        <span class="prelude-val">Ok</span>(<span class="ident">pdb</span>::<span class="ident">SymbolData</span>::<span class="ident">PublicSymbol</span>(<span class="ident">data</span>)) <span class="kw">if</span> <span class="ident">data</span>.<span class="ident">function</span> <span class="op">=&gt;</span> {
+            <span class="comment">// we found the location of a function!</span>
+            <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;{:x}:{:08x} is {}&quot;</span>, <span class="ident">data</span>.<span class="ident">segment</span>, <span class="ident">data</span>.<span class="ident">offset</span>, <span class="ident">symbol</span>.<span class="ident">name</span>()<span class="question-mark">?</span>);
+        }
+        <span class="kw">_</span> <span class="op">=&gt;</span> {}
+    }
+}
+</pre>
+</div><h2 id='reexports' class='section-header'><a href="#reexports">Re-exports</a></h2>
+<table><tr><td><code>pub use fallible_iterator::<a class="trait" href="../fallible_iterator/trait.FallibleIterator.html" title="trait fallible_iterator::FallibleIterator">FallibleIterator</a>;</code></td></tr></table><h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.AnnotationReferenceSymbol.html"
+                                  title='struct pdb::AnnotationReferenceSymbol'>AnnotationReferenceSymbol</a></td>
+                           <td class='docblock-short'>
+                                <p>The information parsed from a symbol record with kind <code>S_ANNOTATIONREF</code>.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.ArgumentList.html"
+                                  title='struct pdb::ArgumentList'>ArgumentList</a></td>
+                           <td class='docblock-short'>
+                                <p>The information parsed from a type record with kind <code>LF_ARGLIST</code>.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.ArrayType.html"
+                                  title='struct pdb::ArrayType'>ArrayType</a></td>
+                           <td class='docblock-short'>
+                                <p>The information parsed from a type record with kind
+<code>LF_ARRAY</code>, <code>LF_ARRAY_ST</code> or <code>LF_STRIDED_ARRAY</code>.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.BaseClassType.html"
+                                  title='struct pdb::BaseClassType'>BaseClassType</a></td>
+                           <td class='docblock-short'>
+                                <p>The information parsed from a type record with kind <code>LF_BCLASS</code> or <code>LF_BINTERFACE</code>.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.BitfieldType.html"
+                                  title='struct pdb::BitfieldType'>BitfieldType</a></td>
+                           <td class='docblock-short'>
+                                <p>The information parsed from a type record with kind <code>LF_BITFIELD</code>.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.ClassType.html"
+                                  title='struct pdb::ClassType'>ClassType</a></td>
+                           <td class='docblock-short'>
+                                <p>The information parsed from a type record with kind
+<code>LF_CLASS</code>, <code>LF_CLASS_ST</code>, <code>LF_STRUCTURE</code>, <code>LF_STRUCTURE_ST</code> or <code>LF_INTERFACE</code>.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.ConstantSymbol.html"
+                                  title='struct pdb::ConstantSymbol'>ConstantSymbol</a></td>
+                           <td class='docblock-short'>
+                                <p>The information parsed from a symbol record with kind <code>S_CONSTANT</code>, or <code>S_CONSTANT_ST</code>.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.DataReferenceSymbol.html"
+                                  title='struct pdb::DataReferenceSymbol'>DataReferenceSymbol</a></td>
+                           <td class='docblock-short'>
+                                <p>The information parsed from a symbol record with kind <code>S_DATAREF</code> or <code>S_DATAREF_ST</code>.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.DataSymbol.html"
+                                  title='struct pdb::DataSymbol'>DataSymbol</a></td>
+                           <td class='docblock-short'>
+                                <p>The information parsed from a symbol record with kind
+<code>S_LDATA32</code>, <code>S_LDATA32_ST</code>, <code>S_GDATA32</code>, <code>S_GDATA32_ST</code>,
+<code>S_LMANDATA</code>, <code>S_LMANDATA_ST</code>, <code>S_GMANDATA</code>, or <code>S_GMANDATA_ST</code>.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.DebugInformation.html"
+                                  title='struct pdb::DebugInformation'>DebugInformation</a></td>
+                           <td class='docblock-short'>
+                                <p>Provides access to the &quot;DBI&quot; stream inside the PDB.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.EnumerateType.html"
+                                  title='struct pdb::EnumerateType'>EnumerateType</a></td>
+                           <td class='docblock-short'>
+                                <p>The information parsed from a type record with kind <code>LF_ENUMERATE</code> or <code>LF_ENUMERATE_ST</code>.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.EnumerationType.html"
+                                  title='struct pdb::EnumerationType'>EnumerationType</a></td>
+                           <td class='docblock-short'>
+                                <p>The information parsed from a type record with kind <code>LF_ENUM</code> or <code>LF_ENUM_ST</code>.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.FieldAttributes.html"
+                                  title='struct pdb::FieldAttributes'>FieldAttributes</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.FieldList.html"
+                                  title='struct pdb::FieldList'>FieldList</a></td>
+                           <td class='docblock-short'>
+                                <p>The information parsed from a type record with kind <code>LF_FIELDLIST</code>.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.FunctionAttributes.html"
+                                  title='struct pdb::FunctionAttributes'>FunctionAttributes</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.MemberFunctionType.html"
+                                  title='struct pdb::MemberFunctionType'>MemberFunctionType</a></td>
+                           <td class='docblock-short'>
+                                <p>The information parsed from a type record with kind <code>LF_MFUNCTION</code>.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.MemberType.html"
+                                  title='struct pdb::MemberType'>MemberType</a></td>
+                           <td class='docblock-short'>
+                                <p>The information parsed from a type record with kind <code>LF_MEMBER</code> or <code>LF_MEMBER_ST</code>.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.MethodList.html"
+                                  title='struct pdb::MethodList'>MethodList</a></td>
+                           <td class='docblock-short'>
+                                <p>The information parsed from a type record with kind <code>LF_METHODLIST</code>.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.MethodListEntry.html"
+                                  title='struct pdb::MethodListEntry'>MethodListEntry</a></td>
+                           <td class='docblock-short'>
+                                <p>An entry in a <code>MethodList</code>.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.MethodType.html"
+                                  title='struct pdb::MethodType'>MethodType</a></td>
+                           <td class='docblock-short'>
+                                <p>The information parsed from a type record with kind <code>LF_ONEMETHOD</code> or <code>LF_ONEMETHOD_ST</code>.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.ModifierType.html"
+                                  title='struct pdb::ModifierType'>ModifierType</a></td>
+                           <td class='docblock-short'>
+                                <p>The information parsed from a type record with kind <code>LF_MODIFIER</code>.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.Module.html"
+                                  title='struct pdb::Module'>Module</a></td>
+                           <td class='docblock-short'>
+                                <p>Represents a module from the DBI stream.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.ModuleInfo.html"
+                                  title='struct pdb::ModuleInfo'>ModuleInfo</a></td>
+                           <td class='docblock-short'>
+                                <p>This struct contains data about a single module from its module info stream.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.ModuleIter.html"
+                                  title='struct pdb::ModuleIter'>ModuleIter</a></td>
+                           <td class='docblock-short'>
+                                <p>A <code>ModuleIter</code> iterates over the modules in the DBI section, producing <code>Module</code>s.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.NestedType.html"
+                                  title='struct pdb::NestedType'>NestedType</a></td>
+                           <td class='docblock-short'>
+                                <p>The information parsed from a type record with kind
+<code>LF_NESTTYPE</code>, <code>LF_NESTTYPE_ST</code>, <code>LF_NESTTYPEEX</code>, or <code>LF_NESTTYPEEX_ST</code>.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.OverloadedMethodType.html"
+                                  title='struct pdb::OverloadedMethodType'>OverloadedMethodType</a></td>
+                           <td class='docblock-short'>
+                                <p>The information parsed from a type record with kind <code>LF_METHOD</code> or <code>LF_METHOD_ST</code>.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.PDB.html"
+                                  title='struct pdb::PDB'>PDB</a></td>
+                           <td class='docblock-short'>
+                                <p><code>PDB</code> provides access to the data within a PDB file.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.PDBInformation.html"
+                                  title='struct pdb::PDBInformation'>PDBInformation</a></td>
+                           <td class='docblock-short'>
+                                <p>A PDB info stream header parsed from a stream.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.PointerAttributes.html"
+                                  title='struct pdb::PointerAttributes'>PointerAttributes</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.PointerType.html"
+                                  title='struct pdb::PointerType'>PointerType</a></td>
+                           <td class='docblock-short'>
+                                <p>The information parsed from a type record with kind <code>LF_POINTER</code>.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.PrimitiveType.html"
+                                  title='struct pdb::PrimitiveType'>PrimitiveType</a></td>
+                           <td class='docblock-short'>
+                                <p>Represents a primitive type like <code>void</code> or <code>char *</code>.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.ProcedureReferenceSymbol.html"
+                                  title='struct pdb::ProcedureReferenceSymbol'>ProcedureReferenceSymbol</a></td>
+                           <td class='docblock-short'>
+                                <p>The information parsed from a symbol record with kind
+<code>S_PROCREF</code>, <code>S_PROCREF_ST</code>, <code>S_LPROCREF</code>, or <code>S_LPROCREF_ST</code>.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.ProcedureType.html"
+                                  title='struct pdb::ProcedureType'>ProcedureType</a></td>
+                           <td class='docblock-short'>
+                                <p>The information parsed from a type record with kind <code>LF_PROCEDURE</code>.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.PublicSymbol.html"
+                                  title='struct pdb::PublicSymbol'>PublicSymbol</a></td>
+                           <td class='docblock-short'>
+                                <p>The information parsed from a symbol record with kind <code>S_PUB32</code> or <code>S_PUB32_ST</code>.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.RawString.html"
+                                  title='struct pdb::RawString'>RawString</a></td>
+                           <td class='docblock-short'>
+                                <p><code>RawString</code> refers to a <code>&amp;[u8]</code> that physically resides somewhere inside a PDB data structure.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.SourceSlice.html"
+                                  title='struct pdb::SourceSlice'>SourceSlice</a></td>
+                           <td class='docblock-short'>
+                                <p>Represents an offset + size of the source file.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.StaticMemberType.html"
+                                  title='struct pdb::StaticMemberType'>StaticMemberType</a></td>
+                           <td class='docblock-short'>
+                                <p>The information parsed from a type record with kind <code>LF_STMEMBER</code> or <code>LF_STMEMBER_ST</code>.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.StreamName.html"
+                                  title='struct pdb::StreamName'>StreamName</a></td>
+                           <td class='docblock-short'>
+                                <p>A named stream contained within the PDB file.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.StreamNames.html"
+                                  title='struct pdb::StreamNames'>StreamNames</a></td>
+                           <td class='docblock-short'>
+                                <p>A list of named streams contained within the PDB file.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.Symbol.html"
+                                  title='struct pdb::Symbol'>Symbol</a></td>
+                           <td class='docblock-short'>
+                                <p>Represents a symbol from the symbol table.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.SymbolIter.html"
+                                  title='struct pdb::SymbolIter'>SymbolIter</a></td>
+                           <td class='docblock-short'>
+                                <p>A <code>SymbolIter</code> iterates over a <code>SymbolTable</code>, producing <code>Symbol</code>s.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.SymbolTable.html"
+                                  title='struct pdb::SymbolTable'>SymbolTable</a></td>
+                           <td class='docblock-short'>
+                                <p>PDB symbol tables contain names, locations, and metadata about functions, global/static data,
+constants, data types, and more.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.ThreadStorageSymbol.html"
+                                  title='struct pdb::ThreadStorageSymbol'>ThreadStorageSymbol</a></td>
+                           <td class='docblock-short'>
+                                <p>The information parsed from a symbol record with kind
+<code>S_LTHREAD32</code>, <code>S_LTHREAD32_ST</code>, <code>S_GTHREAD32</code>, or <code>S_GTHREAD32_ST</code>.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.Type.html"
+                                  title='struct pdb::Type'>Type</a></td>
+                           <td class='docblock-short'>
+                                <p>Represents a type from the type table. A <code>Type</code> has been minimally processed and may not be
+correctly formed or even understood by this library.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.TypeFinder.html"
+                                  title='struct pdb::TypeFinder'>TypeFinder</a></td>
+                           <td class='docblock-short'>
+                                <p>A <code>TypeFinder</code> is a secondary, in-memory data structure that permits efficiently finding types
+by <code>TypeIndex</code>. It starts out empty and must be populated by calling <code>update(&amp;TypeIter)</code> while
+iterating.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.TypeInformation.html"
+                                  title='struct pdb::TypeInformation'>TypeInformation</a></td>
+                           <td class='docblock-short'>
+                                <p><code>TypeInformation</code> provides zero-copy access to a PDB type data stream.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.TypeIter.html"
+                                  title='struct pdb::TypeIter'>TypeIter</a></td>
+                           <td class='docblock-short'>
+                                <p>A <code>TypeIter</code> iterates over a <code>TypeInformation</code>, producing <code>Types</code>s.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.TypeProperties.html"
+                                  title='struct pdb::TypeProperties'>TypeProperties</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.UnionType.html"
+                                  title='struct pdb::UnionType'>UnionType</a></td>
+                           <td class='docblock-short'>
+                                <p>The information parsed from a type record with kind <code>LF_UNION</code> or <code>LF_UNION_ST</code>.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.UserDefinedTypeSymbol.html"
+                                  title='struct pdb::UserDefinedTypeSymbol'>UserDefinedTypeSymbol</a></td>
+                           <td class='docblock-short'>
+                                <p>The information parsed from a symbol record with kind <code>S_UDT</code>, or <code>S_UDT_ST</code>.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.VirtualBaseClassType.html"
+                                  title='struct pdb::VirtualBaseClassType'>VirtualBaseClassType</a></td>
+                           <td class='docblock-short'>
+                                <p>The information parsed from a type record with kind <code>LF_VBCLASS</code> or <code>LF_IVBCLASS</code>.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="struct" href="struct.VirtualFunctionTablePointerType.html"
+                                  title='struct pdb::VirtualFunctionTablePointerType'>VirtualFunctionTablePointerType</a></td>
+                           <td class='docblock-short'>
+                                <p>The information parsed from a type record with kind <code>LF_VFUNCTAB</code>.</p>
+
+                           </td>
+                       </tr></table><h2 id='enums' class='section-header'><a href="#enums">Enums</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class="enum" href="enum.ClassKind.html"
+                                  title='enum pdb::ClassKind'>ClassKind</a></td>
+                           <td class='docblock-short'>
+                                <p>Used by <code>ClassType</code> to distinguish class-like concepts.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="enum" href="enum.Error.html"
+                                  title='enum pdb::Error'>Error</a></td>
+                           <td class='docblock-short'>
+                                <p>An error that occurred while reading or parsing the PDB.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="enum" href="enum.Indirection.html"
+                                  title='enum pdb::Indirection'>Indirection</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="enum" href="enum.PrimitiveKind.html"
+                                  title='enum pdb::PrimitiveKind'>PrimitiveKind</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="enum" href="enum.SymbolData.html"
+                                  title='enum pdb::SymbolData'>SymbolData</a></td>
+                           <td class='docblock-short'>
+                                <p><code>SymbolData</code> contains the information parsed from a symbol record.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="enum" href="enum.TypeData.html"
+                                  title='enum pdb::TypeData'>TypeData</a></td>
+                           <td class='docblock-short'>
+                                <p>Encapsulates parsed data about a <code>Type</code>.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="enum" href="enum.Variant.html"
+                                  title='enum pdb::Variant'>Variant</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr></table><h2 id='traits' class='section-header'><a href="#traits">Traits</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class="trait" href="trait.Source.html"
+                                  title='trait pdb::Source'>Source</a></td>
+                           <td class='docblock-short'>
+                                <p>The <code>pdb</code> crate accesses PDB files via the <code>pdb::Source</code> trait.</p>
+
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="trait" href="trait.SourceView.html"
+                                  title='trait pdb::SourceView'>SourceView</a></td>
+                           <td class='docblock-short'>
+                                <p>An owned, droppable, read-only view of the source file which can be referenced as a byte slice.</p>
+
+                           </td>
+                       </tr></table><h2 id='types' class='section-header'><a href="#types">Type Definitions</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class="type" href="type.NameIter.html"
+                                  title='type pdb::NameIter'>NameIter</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="type" href="type.Result.html"
+                                  title='type pdb::Result'>Result</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class="type" href="type.TypeIndex.html"
+                                  title='type pdb::TypeIndex'>TypeIndex</a></td>
+                           <td class='docblock-short'>
+                                <p><code>TypeIndex</code> refers to a type somewhere in <code>PDB.type_information()</code>.</p>
+
+                           </td>
+                       </tr></table></section><section id="search" class="content hidden"></section><section class="footer"></section><aside id="help" class="hidden"><div><h1 class="hidden">Help</h1><div class="shortcuts"><h2>Keyboard Shortcuts</h2><dl><dt><kbd>?</kbd></dt><dd>Show this help dialog</dd><dt><kbd>S</kbd></dt><dd>Focus the search field</dd><dt><kbd>↑</kbd></dt><dd>Move up in search results</dd><dt><kbd>↓</kbd></dt><dd>Move down in search results</dd><dt><kbd>↹</kbd></dt><dd>Switch tab</dd><dt><kbd>&#9166;</kbd></dt><dd>Go to active search result</dd><dt><kbd>+</kbd></dt><dd>Expand all sections</dd><dt><kbd>-</kbd></dt><dd>Collapse all sections</dd></dl></div><div class="infos"><h2>Search Tricks</h2><p>Prefix searches with a type followed by a colon (e.g. <code>fn:</code>) to restrict the search to a given type.</p><p>Accepted types are: <code>fn</code>, <code>mod</code>, <code>struct</code>, <code>enum</code>, <code>trait</code>, <code>type</code>, <code>macro</code>, and <code>const</code>.</p><p>Search functions by type signature (e.g. <code>vec -> usize</code> or <code>* -> vec</code>)</p><p>Search multiple things at once by splitting your query with comma (e.g. <code>str,u8</code> or <code>String,struct:Vec,test</code>)</p></div></div></aside><script>window.rootPath = "../";window.currentCrate = "pdb";</script><script src="../aliases.js"></script><script src="../main.js"></script><script defer src="../search-index.js"></script></body></html>

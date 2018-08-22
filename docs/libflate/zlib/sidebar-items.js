@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["CompressionLevel","Compression levels defined by the ZLIB format."],["Lz77WindowSize","LZ77 Window sizes defined by the ZLIB format."]],"struct":[["Decoder","ZLIB decoder."],["EncodeOptions","Options for a ZLIB encoder."],["Encoder","ZLIB encoder."],["Header","ZLIB header."]]});

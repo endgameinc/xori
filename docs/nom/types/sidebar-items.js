@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["CompleteByteSlice","Holds a complete byte array, for which the `at_eof` method always returns true"],["CompleteStr","Holds a complete String, for which the `at_eof` method always returns true"],["Input",""]]});

@@ -1,0 +1,1 @@
+initSidebarItems({"constant":[["CASTAGNOLI",""],["CASTAGNOLI_TABLE",""],["IEEE",""],["IEEE_TABLE",""],["KOOPMAN",""],["KOOPMAN_TABLE",""]],"fn":[["checksum_castagnoli",""],["checksum_ieee",""],["checksum_koopman",""],["make_table",""],["update",""]],"struct":[["Digest",""]],"trait":[["Hasher32",""]]});
