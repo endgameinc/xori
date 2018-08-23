@@ -33,6 +33,17 @@ pub enum Modex86
     Mode64 = 1 << 3, 
 }
 
+impl Modex86 {
+    pub fn from_mode(mode: &::disasm::Mode) -> Option<Modex86> {
+        match mode {
+            Mode::ModeLittleEndian | Mode::ModeBigEndian => None,
+            Mode::Mode16 => Some(Modex86::Mode16),
+            Mode::Mode32 => Some(Modex86::Mode32),
+            Mode::Mode64 => Some(Modex86::Mode64)
+        }
+    }
+}
+
 // Structs
 #[derive(Debug)]
 pub struct Immediatex86{
@@ -657,7 +668,7 @@ pub fn disasmx86<T: ArchDetail + Debug>(
     _length: &mut usize,
     _address: u64, 
     _instructions: &mut Instruction<T>, 
-    _mode: &Mode) -> bool
+    _mode: Modex86) -> bool
 { 
     let code_info = CodeInfo{
         code: _code,
@@ -666,16 +677,8 @@ pub fn disasmx86<T: ArchDetail + Debug>(
         address: _instructions.address,
     };
     let mut instr = Instructionx86::new(code_info);
-    let ret: bool = match _mode {
-        _mode if *_mode as u8 == Modex86::Mode16 as u8 => decode_instructionx86(&mut instr, Modex86::Mode16),
-        _mode if *_mode as u8 == Modex86::Mode32 as u8 => decode_instructionx86(&mut instr, Modex86::Mode32),
-        _mode if *_mode as u8 == Modex86::Mode64 as u8 => decode_instructionx86(&mut instr, Modex86::Mode64),
-        _ =>{
-            error!("Mode is not valid. Please choose (Mode16, Mode32, Mode64)");
-            false
-        },
-    };
-    if !ret {
+
+    if !decode_instructionx86(&mut instr, _mode) {
         *_length = (instr.cursor - _address) as usize;
         return false;
     }
@@ -687,7 +690,8 @@ pub fn disasmx86<T: ArchDetail + Debug>(
 
     disasm_debug!("internal _instructions {:#?}", instr);
     disasm_debug!("_instructions {:?}", _instructions);
-    return ret;
+
+    return true;
 }
 
 fn decode_instructionx86(
