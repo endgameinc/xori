@@ -322,7 +322,7 @@ impl Statex86 {
         address: i64,
         value_size: usize) -> i64
     {
-        if address == 0{
+        if address == 0 {
             return 0;
         }
 

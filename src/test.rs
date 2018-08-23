@@ -361,3 +361,15 @@ fn flirt_up()
     sig_analyzer.load_flirts(&String::new());
     sig_analyzer.flirt_match(&bytes);
 }
+
+#[test]
+fn test_read_int() {
+    use arch::x86::analyzex86::read_int;
+    let buf = [0x11, 0x22, 0x33, 0x44, 0xff, 0xff, 0xff, 0xff];
+
+    assert!(read_int::<u8>(0, 0, &buf) == Some(0x11));
+    assert!(read_int::<u16>(0, 0, &buf) == Some(0x2211));
+    assert!(read_int::<u32>(0, 0, &buf) == Some(0x44332211));
+    assert!(read_int::<u64>(0, 0, &buf) == Some(0xffffffff44332211));
+    assert!(read_int::<i16>(6, 0, &buf) == Some(-1i16));
+}

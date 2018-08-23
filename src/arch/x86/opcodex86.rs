@@ -22,6 +22,7 @@ pub enum VexXopOpcode {
 }
 
 /// Effective Address Displacement Sizes
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum EADisplacement{
   Size0,
   Size8,
@@ -1021,15 +1022,15 @@ fn opcode_read_sib(_instr: &mut Instructionx86) -> bool
         0x5 | 0xd=>{
             match accessor!(mod: as_ref!(_instr, mod_rm, data)){
                 0x0=>{
-                    as_mut!(_instr, mod_rm, displacement_ea, EADisplacement::Size32 as u8);
+                    as_mut!(_instr, mod_rm, displacement_ea, EADisplacement::Size32);
                     as_mut!(_instr, mod_rm, sib, sib_base, 0);
                 },
                 0x1=>{
-                    as_mut!(_instr, mod_rm, displacement_ea, EADisplacement::Size8 as u8);
+                    as_mut!(_instr, mod_rm, displacement_ea, EADisplacement::Size8);
                     as_mut!(_instr, mod_rm, sib, sib_base, sib_base + _base);
                 },
                 0x2=>{
-                    as_mut!(_instr, mod_rm, displacement_ea, EADisplacement::Size32 as u8);
+                    as_mut!(_instr, mod_rm, displacement_ea, EADisplacement::Size32);
                     as_mut!(_instr, mod_rm, sib, sib_base, sib_base + _base);
                 },
                 0x3=>{ return false; },
@@ -1072,66 +1073,44 @@ fn opcode_read_displacement(_instr: &mut Instructionx86) -> bool
         },
         None=>{},
     }
-    let mut displ8: i8 = 0;
-    let mut displ16: i16 = 0;
-    let mut displ32: i32 = 0;
-    let mut disp_ea: u8 = 0; 
-    match _instr.mod_rm{
-        Some(ref rm)=>{
-            disp_ea = rm.displacement_ea;
-        },
-        None=>{},
-    }
+
+    let disp_ea = _instr.mod_rm.as_ref()
+        .map(|rm| &rm.displacement_ea)
+        .unwrap_or(&EADisplacement::Size0)
+        .clone();
+
     disasm_debug!("\tdisp_ea is {:?}", disp_ea);
-    match disp_ea{
-        disp_ea if disp_ea == EADisplacement::Size0 as u8 =>{},
-        disp_ea if disp_ea == EADisplacement::Size8 as u8 =>{
+    let displ32: i32 = match disp_ea {
+        EADisplacement::Size0 => {
+            return true;
+        },
+        EADisplacement::Size8 => {
             disasm_debug!("get_int::<i8>");
-            if !get_int_signed::<i8>(_instr, &mut displ8){ return false; }
-            match _instr.mod_rm {
-                Some(ref mut rm)=>{
-                    match rm.displacement{
-                        Some(ref mut disp)=>{
-                            disp.data = displ8 as i32;
-                        },
-                        None=>{},
-                    }
-                },
-                None=>{},
+            match get_int::<i8>(_instr) {
+                Some(value) => value as i32,
+                None => { return false; }
             }
         },
-        disp_ea if disp_ea == EADisplacement::Size16 as u8 =>{
+        EADisplacement::Size16 => {
             disasm_debug!("get_int::<i16>");
-            if !get_int_signed::<i16>(_instr, &mut displ16){ return false; }
-            match _instr.mod_rm {
-                Some(ref mut rm)=>{
-                    match rm.displacement{
-                        Some(ref mut disp)=>{
-                            disp.data = displ16 as i32;
-                        },
-                        None=>{},
-                    }
-                },
-                None=>{},
+            match get_int::<i16>(_instr) {
+                Some(value) => value as i32,
+                None => { return false; }
             }
         },
-        disp_ea if disp_ea == EADisplacement::Size32 as u8 =>{
+        EADisplacement::Size32 => {
             disasm_debug!("get_int::<i32>");
-            if !get_int_signed::<i32>(_instr, &mut displ32){ return false; }
-            match _instr.mod_rm {
-                Some(ref mut rm)=>{
-                    match rm.displacement{
-                        Some(ref mut disp)=>{
-                            disp.data = displ32 as i32;
-                        },
-                        None=>{},
-                    }
-                },
-                None=>{},
+            match get_int::<i32>(_instr) {
+                Some(value) => value,
+                None => { return false; }
             }
         },
-        _=>{},
-    }
+    };
+
+    _instr.mod_rm.as_mut().map(|ref mut rm| {
+        rm.displacement.as_mut().map(|ref mut disp| { disp.data = displ32; })
+    });
+
     return true;
 }
 
@@ -1159,7 +1138,7 @@ fn opcode_check_eff_addr_displacement(
                             match _instr.mod_rm{
                                 Some( ref mut rm ) => {
                                     rm.base_ea = EABases::NoBase as u16;
-                                    rm.displacement_ea = EADisplacement::Size16 as u8;
+                                    rm.displacement_ea = EADisplacement::Size16;
                                 },
                                 None => {}
                             }
@@ -1169,7 +1148,7 @@ fn opcode_check_eff_addr_displacement(
                             match _instr.mod_rm{
                                 Some( ref mut rm ) => {
                                     rm.base_ea = rm.base_ea_base + *_rm_field as u16;
-                                    rm.displacement_ea = EADisplacement::Size0 as u8;
+                                    rm.displacement_ea = EADisplacement::Size0;
                                     rm.kind = RegType::EABases;
                                 },
                                 None => {}
@@ -1181,7 +1160,7 @@ fn opcode_check_eff_addr_displacement(
                     match _instr.mod_rm{
                         Some( ref mut rm ) => {
                             rm.base_ea = rm.base_ea_base + *_rm_field as u16;
-                            rm.displacement_ea = EADisplacement::Size8 as u8;
+                            rm.displacement_ea = EADisplacement::Size8;
                             rm.kind = RegType::EABases;
                         },
                         None => {},
@@ -1193,7 +1172,7 @@ fn opcode_check_eff_addr_displacement(
                     match _instr.mod_rm{
                         Some( ref mut rm ) => {
                             rm.base_ea = rm.base_ea_base + *_rm_field as u16;
-                            rm.displacement_ea = EADisplacement::Size16 as u8;
+                            rm.displacement_ea = EADisplacement::Size16;
                             rm.kind = RegType::EABases;
                         },
                         None => {},
@@ -1204,7 +1183,7 @@ fn opcode_check_eff_addr_displacement(
                     match _instr.mod_rm{
                         Some( ref mut rm ) => {
                             rm.base_ea = rm.base_ea_reg + *_rm_field as u16;
-                            rm.displacement_ea = EADisplacement::Size32 as u8;
+                            rm.displacement_ea = EADisplacement::Size32;
                             rm.kind = RegType::AllRegisters;
                         },
                         None => {},
@@ -1228,7 +1207,7 @@ fn opcode_check_eff_addr_displacement(
                 0x0=>{
                     match _instr.mod_rm {
                         Some( ref mut rm ) => {
-                            rm.displacement_ea = EADisplacement::Size0 as u8;
+                            rm.displacement_ea = EADisplacement::Size0;
                         },
                         None => {},
                     }
@@ -1251,7 +1230,7 @@ fn opcode_check_eff_addr_displacement(
                             match _instr.mod_rm {
                                 Some( ref mut rm ) => {
                                     rm.base_ea = EABases::NoBase as u16;
-                                    rm.displacement_ea = EADisplacement::Size32 as u8;
+                                    rm.displacement_ea = EADisplacement::Size32;
                                 },
                                 None => {},
                             }
@@ -1271,7 +1250,7 @@ fn opcode_check_eff_addr_displacement(
                     _instr.size.displacement = 1;
                     match _instr.mod_rm {
                         Some( ref mut rm ) => {
-                            rm.displacement_ea = match *_mod_field { 0x1=>EADisplacement::Size8 as u8, _=>EADisplacement::Size32 as u8 };
+                            rm.displacement_ea = match *_mod_field { 0x1=>EADisplacement::Size8, _=>EADisplacement::Size32 };
                         },
                         None => {},
                     }
@@ -1303,7 +1282,7 @@ fn opcode_check_eff_addr_displacement(
                     match _instr.mod_rm {
                         Some( ref mut rm ) => {
                             rm.base_ea = rm.base_ea_reg + *_rm_field as u16;
-                            rm.displacement_ea = EADisplacement::Size0 as u8;
+                            rm.displacement_ea = EADisplacement::Size0;
                             rm.kind = RegType::AllRegisters;
                         },
                         None => {},
