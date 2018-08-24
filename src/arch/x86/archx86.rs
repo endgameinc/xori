@@ -5,8 +5,8 @@ use arch::x86::opcodex86::*;
 use arch::x86::operandx86::*;
 use arch::x86::disasmtablesx86::*;
 use arch::x86::displayx86::*;
-use std::ops::BitOr;
 use num::{Num, NumCast};
+use num::traits::AsPrimitive;
 use std::fmt::Debug;
 
 // Enums
@@ -31,6 +31,17 @@ pub enum Modex86
     Mode32 = 1 << 2,
     /// 64-bit mode (X86)
     Mode64 = 1 << 3, 
+}
+
+impl Modex86 {
+    pub fn from_mode(mode: &::disasm::Mode) -> Option<Modex86> {
+        match mode {
+            Mode::ModeLittleEndian | Mode::ModeBigEndian => None,
+            Mode::Mode16 => Some(Modex86::Mode16),
+            Mode::Mode32 => Some(Modex86::Mode32),
+            Mode::Mode64 => Some(Modex86::Mode64)
+        }
+    }
 }
 
 // Structs
@@ -192,7 +203,7 @@ pub struct ModRmx86
     pub base_ea_reg: u16,
     pub base_ea_base: u16,
     pub base_ea: u16,
-    pub displacement_ea: u8,
+    pub displacement_ea: EADisplacement,
     /// The displacement, used for memory operands
     pub displacement:Option<Displacementx86>,
     /// SIB state
@@ -209,7 +220,7 @@ impl Default for ModRmx86 {
             base_ea_reg: 0,
             base_ea_base: 0,
             base_ea: 0,
-            displacement_ea: 0,
+            displacement_ea: EADisplacement::Size0,
             displacement: None,
             sib: None,
         }
@@ -614,77 +625,17 @@ pub fn release_byte(_instr: &mut Instructionx86){
     _instr.cursor=_instr.cursor-1;
 }
 
-pub fn get_int_signed<T: Num + BitOr<Output=T> + NumCast + Copy>(
-    _instr: &mut Instructionx86,
-     _byte: &mut T)-> bool
+pub fn get_int<T: Num + NumCast + Copy + 'static>(
+    _instr: &mut Instructionx86) -> Option<T>
+    where u64: AsPrimitive<T>
 {
-    
-    let length = ::std::mem::size_of::<T>();  
-    disasm_debug!("get_int_signed() {:?}", length);
-    for offset in 0..length {
-        let mut _byte0: u8 = 0;
-        let address_offset = (_instr.cinfo.offset-_instr.cinfo.address) as usize;
-        let offset_size: usize = ((_instr.cursor+offset as u64)-_instr.cinfo.offset) as usize;
-        if offset_size+address_offset >= _instr.cinfo.size{
-            return false;
-        }
-        _byte0 = _instr.cinfo.code[offset_size+address_offset];
-        let new_num = (_byte0 as u64) << (offset as u64 * 8);
-        disasm_debug!("\tget_int byte {:x}", _byte0);
-        disasm_debug!("\tget_int shifted byte {:x}", new_num);
-
-        match length{
-            1=>{
-                let mut cast_byte: i8 =  NumCast::from(*_byte).unwrap();
-                cast_byte |= new_num as i8;
-                *_byte = NumCast::from(cast_byte).unwrap();
-            },
-            2=>{
-                let mut cast_byte: i16 =  NumCast::from(*_byte).unwrap();
-                cast_byte |= new_num as i16;
-                *_byte = NumCast::from(cast_byte).unwrap();
-            },
-            4=>{
-                let mut cast_byte: i32 =  NumCast::from(*_byte).unwrap();
-                cast_byte |= new_num as i32;
-                *_byte = NumCast::from(cast_byte).unwrap();
-            },
-            _=>{
-                let mut cast_byte: i64 =  NumCast::from(*_byte).unwrap();
-                cast_byte |= new_num as i64;
-                *_byte = NumCast::from(cast_byte).unwrap();
-            },
-        }
-    }   
-    _instr.cursor=_instr.cursor+length as u64;
-    return true;
+    let result = ::arch::x86::analyzex86::read_int::<T>(_instr.cursor as usize, _instr.cinfo.address as usize, &_instr.cinfo.code);
+    if result.is_some() {
+        _instr.cursor += ::std::mem::size_of::<T>() as u64;
+    }
+    return result;
 }
 
-pub fn get_int<T: Num + BitOr<Output=T> + NumCast + Copy>(
-    _instr: &mut Instructionx86,
-     _byte: &mut T)-> bool
-{
-    
-    let length = ::std::mem::size_of::<T>();  
-    disasm_debug!("get_int() {:?}", length);
-    for offset in 0..length {
-        let mut _byte0: u8 = 0;
-        let address_offset = (_instr.cinfo.offset-_instr.cinfo.address) as usize;
-        let offset_size: usize = ((_instr.cursor+offset as u64)-_instr.cinfo.offset) as usize;
-        if offset_size+address_offset >= _instr.cinfo.size{
-            return false;
-        }
-        _byte0 = _instr.cinfo.code[offset_size+address_offset];
-        let new_num = (_byte0 as u64) << (offset as u64 * 8);
-        disasm_debug!("\tget_int byte {:x}", _byte0);
-        disasm_debug!("\tget_int shifted byte {:x}", new_num);
-
-        
-        *_byte = *_byte | NumCast::from(new_num).unwrap();
-    }   
-    _instr.cursor=_instr.cursor+length as u64;
-    return true;
-}
 
 impl <'a>Instructionx86<'a>{
     pub fn new(_code: CodeInfo<'a>)->Instructionx86<'a>{
@@ -717,7 +668,7 @@ pub fn disasmx86<T: ArchDetail + Debug>(
     _length: &mut usize,
     _address: u64, 
     _instructions: &mut Instruction<T>, 
-    _mode: &Mode) -> bool
+    _mode: Modex86) -> bool
 { 
     let code_info = CodeInfo{
         code: _code,
@@ -726,16 +677,8 @@ pub fn disasmx86<T: ArchDetail + Debug>(
         address: _instructions.address,
     };
     let mut instr = Instructionx86::new(code_info);
-    let ret: bool = match _mode {
-        _mode if *_mode as u8 == Modex86::Mode16 as u8 => decode_instructionx86(&mut instr, Modex86::Mode16),
-        _mode if *_mode as u8 == Modex86::Mode32 as u8 => decode_instructionx86(&mut instr, Modex86::Mode32),
-        _mode if *_mode as u8 == Modex86::Mode64 as u8 => decode_instructionx86(&mut instr, Modex86::Mode64),
-        _ =>{
-            error!("Mode is not valid. Please choose (Mode16, Mode32, Mode64)");
-            false
-        },
-    };
-    if !ret {
+
+    if !decode_instructionx86(&mut instr, _mode) {
         *_length = (instr.cursor - _address) as usize;
         return false;
     }
@@ -747,7 +690,8 @@ pub fn disasmx86<T: ArchDetail + Debug>(
 
     disasm_debug!("internal _instructions {:#?}", instr);
     disasm_debug!("_instructions {:?}", _instructions);
-    return ret;
+
+    return true;
 }
 
 fn decode_instructionx86(

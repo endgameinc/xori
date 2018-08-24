@@ -847,88 +847,61 @@ fn operand_immediate(_instr: &mut Instructionx86, _size: u8) -> bool
         disasm_debug!("\talready consumed maximum immediates");
         return false;
     }
-    let mut _byte_u8: u8 = 0;
-    let mut _byte_u16: u16 = 0;
-    let mut _byte_u32: u32 = 0;
-    let mut _byte_u64: u64 = 0;
 
     let current_location = _instr.cursor - _instr.start;
     let mut size = _size;
-    if size == 0{
+    if size == 0 {
         size = _instr.size.immediate;
     } else {
         _instr.size.immediate = size;
-    }
+    };
 
-    match size{
-        1=>{
+    let imm: i64 = match size {
+        1 => {
             disasm_debug!("get_int::<u8>");
-            if !get_int::<u8>(_instr, &mut _byte_u8){ return false; }
-            if _instr.immediates.is_none(){
-                _instr.immediates = Some(Immediatex86{..Default::default()});
-            }
-            match _instr.immediates{
-                Some(ref mut im)=>{
-
-                    im.data[im.count as usize] = _byte_u8 as i64;
-                    im.offset[im.count as usize] = current_location as u8;
-                    im.count+=1
-                },
-                None=>{},
+            match get_int::<u8>(_instr) {
+                Some(value) => value as i64,
+                None => { return false; }
             }
         },
-        2=>{
+        2 => {
             disasm_debug!("get_int::<u16>");
-            if !get_int::<u16>(_instr, &mut _byte_u16){ return false; }
-            if _instr.immediates.is_none(){
-                _instr.immediates = Some(Immediatex86{..Default::default()});
-            }
-            match _instr.immediates{
-                Some(ref mut im)=>{
-
-                    im.data[im.count as usize] = _byte_u16 as i64;
-                    im.offset[im.count as usize] = current_location as u8;
-                    im.count+=1
-                },
-                None=>{},
+            match get_int::<u16>(_instr) {
+                Some(value) => value as i64,
+                None => { return false; }
             }
         },
-        4=>{
+        4 => {
             disasm_debug!("get_int::<u32>");
-            if !get_int::<u32>(_instr, &mut _byte_u32){ return false; }
-            if _instr.immediates.is_none(){
-                _instr.immediates = Some(Immediatex86{..Default::default()});
-            }
-            match _instr.immediates{
-                Some(ref mut im)=>{
-
-                    im.data[im.count as usize] = _byte_u32 as i64;
-                    im.offset[im.count as usize] = current_location as u8;
-                    im.count+=1
-                },
-                None=>{},
+            match get_int::<u32>(_instr) {
+                Some(value) => value as i64,
+                None => { return false; }
             }
         },
-        8=>{
+        8 => {
             disasm_debug!("get_int::<u64>");
-            if !get_int::<u64>(_instr, &mut _byte_u64){ return false; }
-            if _instr.immediates.is_none(){
-                _instr.immediates = Some(Immediatex86{..Default::default()});
-            }
-            match _instr.immediates{
-                Some(ref mut im)=>{
-
-                    im.data[im.count as usize] = _byte_u64 as i64;
-                    im.offset[im.count as usize] = current_location as u8;
-                    im.count+=1
-                },
-                None=>{},
+            match get_int::<u64>(_instr) {
+                Some(value) => value as i64,
+                None => { return false; }
             }
         },
-        _=>{
+        _ => {
             disasm_debug!("\tunknown size");
             return false;
         },
+    };
+
+    if _instr.immediates.is_none() {
+        _instr.immediates = Some(Immediatex86{..Default::default()});
+    }
+    match _instr.immediates {
+        Some(ref mut im) => {
+
+            im.data[im.count as usize] = imm;
+            im.offset[im.count as usize] = current_location as u8;
+            im.count += 1
+        },
+        None => {},
     }
 
     return true;
@@ -1330,7 +1303,7 @@ pub fn operand_read(_instr: &mut Instructionx86) -> bool
                 }
                 //AVX512 compressed displacement scaling factor
                 if DISASMX86_OPERANDSETS[spec][index].encoding != OperandEncodingx86::ENCODINGREG &&
-                as_ref!(_instr, mod_rm, displacement_ea) == EADisplacement::Size8 as u8 {
+                as_ref!(_instr, mod_rm, displacement_ea) == EADisplacement::Size8 {
                     match _instr.mod_rm {
                         Some(ref mut mod_rm)=>{
                             match mod_rm.displacement{
