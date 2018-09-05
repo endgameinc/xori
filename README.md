@@ -7,7 +7,7 @@
 Xori is an automation-ready disassembly and static analysis library that consumes shellcode or PE binaries and provides triage analysis data.
 
 ### Acknowledgements:
-Xori wouldn't exist without inspiration and ideas from the open source community. We are indebted to the work of the [capstone engine](http://www.capstone-engine.org/) and the [LLVM Project](https://llvm.org/).
+Xori wouldn't exist without inspiration and ideas from the open source community. We are indebted to the work of the [Capstone engine](http://www.capstone-engine.org/) and the [LLVM Project](https://llvm.org/).
 
 ## Architectures:
 * i386
