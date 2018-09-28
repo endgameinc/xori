@@ -50,7 +50,7 @@ pub struct FlirtSignature{
     pub references: Vec<FlirtRef>,
 }
 
-static X86_32_PE: [Signature; 3] = [
+static X86_32_PE: [Signature; 4] = [
     Signature{ 
         name: "_standard_func_header", 
         pattern: &[
@@ -61,14 +61,53 @@ static X86_32_PE: [Signature; 3] = [
     Signature{ 
         name: "_non_standard_func_header", 
         pattern: &[
-            r"\x55\x54\x5D", //push ebp, push esp, pop ebp
-            r"\x81\x6C\x24", ////sub dword ptr [esp+4], 33h
+            // push ebp
+            // push esp
+            // pop ebp
+            r"\x55\x54\x5D", 
+            // sub dword ptr [esp+4], 33h
+            r"\x81\x6C\x24", 
+            // push -1
+            // push offset SEH_402F80
+            r"\x6A.\x68..[\x40-\x4F]\x00",
+            // mov     edx, [esp+arg_4]
+            // push    esi 
+            r"\x8B..\x56",
+            r"\x8B..\x56",
+            // push    esi
+            // push    edi
+            // mov esi, ecx
+            r"\x56\x57\x8B[\x00-\xFF]",
+            // push    esi
+            // mov     esi, ecx
+            r"\x56\x8B\xF1",
+            // push    ebx
+            // push    esi
+            // mov     esi, ecx
+            r"\x53\x56\x8B\xF1",
+            // push    ebx
+            // push    ecx
+            // push    ebx
+            // lea
+            r"\x53\x51\x53\x8D",
+            // mov     eax, offset off_419448
+            r"[\xB8-\xBF]..[\x40-\x4F]\x00",
+            // mov     eax, large fs:0
+            r"\x64\xA1\x00\x00\x00",
+        ], 
+    },
+    Signature{ 
+        name: "_null_func", 
+        pattern: &[
+            // xor     eax, eax
+            // ret 4
+            r"\x33\xC0\xC2.\x00", 
         ], 
     },
     Signature{ 
         name: "_possible_function_jump", 
         pattern: &[
-            r"\x55\xE9", //push ebp, jmp
+            r"\x55\xE9..[\x40-\x4F]\x00", //push ebp, jmp
             r"\xE9[\x01-\xFF]\x00\x00\x00", // jmp short
         ], 
     },
