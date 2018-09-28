@@ -670,6 +670,7 @@ pub fn get_dll_binary(
 pub fn build_dll_import_addresses<'a>(
 	analysis: &mut Analysisx86,
     mem_image: &mut MemoryBounds<'a>,
+    mem_manager: &mut MemoryManager,
     config: &Config)
 {
     println!("\tLOADING SYMBOLS");
@@ -720,7 +721,14 @@ pub fn build_dll_import_addresses<'a>(
                     		(func.ft_address as usize, 
                     		(import.virtual_address + rva)));
                     }
-                }            
+                }
+                // Add import memory bounds
+                mem_manager.list.push(MemoryBounds{
+                    base_addr: import.virtual_address as usize,
+                    size: VIRTUAL_ADDRESS_OFFSET as usize,
+                    mem_type: MemoryType::Import,
+                    binary: &mut [0u8; 0], // empty
+                });            
                 vaddr += VIRTUAL_ADDRESS_OFFSET;
             }
         }

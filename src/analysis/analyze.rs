@@ -314,6 +314,7 @@ fn disassemble_init(
                     build_dll_import_addresses(
                         &mut analysis,
                         &mut mem_image,
+                        &mut mem_manager,
                         _config);
 
                     mem_manager.list.push(mem_image);
@@ -407,6 +408,7 @@ fn disassemble_init(
             });
 
             let mut code_start_state = state.clone();
+            let mut data_start_state = state.clone();
             analysis_queue.push_front(state);
             
             // Each new state will be processed in this queue
@@ -428,8 +430,9 @@ fn disassemble_init(
                 }
             }
 
-            // PASS 2 reanalyze beginning
-            if !code_start_state.emulation_enabled{
+            
+            if !code_start_state.emulation_enabled {
+                // PASS 2 reanalyze beginning of Code
                 code_start_state.offset = code_start;
                 code_start_state.current_function_addr=0;
                 code_start_state.analysis_type = AnalysisType::Data;
@@ -450,7 +453,31 @@ fn disassemble_init(
                         None=>{},
                     }
                 }
+
+                // PASS 3 data
+                data_start_state.offset = data_start;
+                data_start_state.current_function_addr=0;
+                data_start_state.analysis_type = AnalysisType::Data;
+
+                analysis_queue.push_front(data_start_state);
+
+                while !analysis_queue.is_empty()
+                {
+                    let mut new_state = analysis_queue.pop_front();
+                    match new_state{
+                        Some(ref mut nstate)=>
+                        {
+                            recurse_disasmx86(
+                                &mut analysis, 
+                                &mut mem_manager,
+                                nstate, 
+                                &mut analysis_queue);
+                        }
+                        None=>{},
+                    }
+                }
             }
+
             return Some(analysis);      
         },
         _=>{},

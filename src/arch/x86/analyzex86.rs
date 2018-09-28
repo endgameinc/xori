@@ -237,6 +237,7 @@ impl Analysisx86
                 // check if function exists in json pdb files
                 if new_function.name.is_empty()
                 {
+                    new_function.name = format!("sub_{:x}", destination_offset);
                     match self.symbols
                     {
                         Some(ref sym)=>{
@@ -1321,14 +1322,6 @@ pub fn recurse_disasmx86(
             }
         }
         
-        if check_address_already_analyzed(
-            state.offset as u64,
-            &analysis.address_tracker)
-        { 
-            return true;
-        }
-
-
         match state.analysis_type
         {
             AnalysisType::Data=>{
@@ -1353,6 +1346,14 @@ pub fn recurse_disasmx86(
                 }
             },
             AnalysisType::Code=>{
+
+                if check_address_already_analyzed(
+                    state.offset as u64,
+                    &analysis.address_tracker)
+                { 
+                    return true;
+                }
+
                 match check_instruction_exists(state.offset as u64, analysis)
                 {
                     Some(mut instruction)=>{
