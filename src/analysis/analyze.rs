@@ -229,7 +229,11 @@ fn disassemble_init(
             println!("MODE: {:?}", analysis.xi.mode);
 
             /* Initialize Signature Analyzer */
-            analysis.sig_analyzer.init(_config, &analysis.xi.arch, &analysis.xi.mode);
+            analysis.sig_analyzer.init(
+                _config, 
+                &analysis.xi.arch, 
+                &analysis.xi.mode, 
+                &analysis.header.binary_type);
 
             // Initalize the CPU state
             let mut state = Statex86{
@@ -477,6 +481,11 @@ fn disassemble_init(
                     }
                 }
             }
+
+            // Function Block Renaming
+            // 1) is # of functions > 0
+            // 2) search all code block starts
+            // 3) Apply search
 
             return Some(analysis);      
         },

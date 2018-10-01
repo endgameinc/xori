@@ -1,6 +1,7 @@
 //signature_analysis.rs
 
 use configuration::Config;
+use analysis::analyze::BinaryType;
 use disasm::Arch;
 use disasm::Mode;
 use regex::bytes::Regex;
@@ -148,28 +149,30 @@ impl SigAnalyzer
             full_signatures_regex: Regex::new("").unwrap()
         }
     }
-    pub fn init(&mut self, cfg: &Config, arch: &Arch, mode: &Mode)
+    pub fn init(&mut self, cfg: &Config, arch: &Arch, mode: &Mode, btype: &BinaryType,)
     {
         match *arch
         {
             Arch::ArchX86=>{
-                match *mode
+                match (*btype, *mode)
                 {
-                    Mode::Mode16=>{
+                    (BinaryType::PE, Mode::Mode16)=>{
 
                     },
-                    Mode::Mode32=>{
+                    (BinaryType::PE, Mode::Mode32)=>{
                         if cfg.x86.flirt_enabled {
                             self.load_flirts(&cfg.x86.pe_file.flirt_pat_glob32);
+                            self.load_internal_flirts(btype, mode);
                         }
                         for sig in X86_32_PE.iter()
                         {
                             self.signatures.insert(String::from(sig.name), sig.pattern.to_vec());
                         }
                     },
-                    Mode::Mode64=>{
+                    (BinaryType::PE, Mode::Mode64)=>{
                         if cfg.x86.flirt_enabled {
                             self.load_flirts(&cfg.x86.pe_file.flirt_pat_glob64);
+                            self.load_internal_flirts(btype, mode);
                         }
                         for sig in X86_64_PE.iter()
                         {
@@ -275,8 +278,9 @@ impl SigAnalyzer
             _last_known_len = known.len();
             if _last_known_len == 0 {
                 for (name, flirtsig) in self.flirts.iter() {
+                    println!("SIG: {}", name);
                     for mat in flirtsig.pattern.find_iter(bytes) { // can use find iter, because no named groups
-                        if flirtsig.sig_crc16 == crc16::checksum_usb(&bytes[32..32+flirtsig.crc16_len]) {
+                        //if flirtsig.sig_crc16 == crc16::checksum_usb(&bytes[32..32+flirtsig.crc16_len]) {
                             let fm = FlirtMatch {
                                 refcount: flirtsig.refcount,
                                 name: name.to_string(),
@@ -287,7 +291,7 @@ impl SigAnalyzer
                             } else {
                                 unknown.entry(mat.start()).or_insert(vec![]).push(fm);
                             }
-                        }
+                        //}
                     }
                 } // all sigs
             }
@@ -367,5 +371,143 @@ impl SigAnalyzer
             None=>{}
         }
         return sig_to_offsets;
+    }
+
+    pub fn load_internal_flirts(&mut self, btype: &BinaryType, mode: &Mode)
+    {
+        println!("LOADING INTERNAL FLIRT SIGNATURES");
+        match (*btype, *mode)
+        {
+            (BinaryType::PE, Mode::Mode32)=>{
+                let mut x86_32_pe_msvc: BTreeMap<String, FlirtSignature> = BTreeMap::new();
+                x86_32_pe_msvc.insert(
+                    String::from("_WinMain_0"),
+                    //MSVC
+                    FlirtSignature{ 
+                        name: String::from("_WinMain"), 
+                        // push eax
+                        // push esi
+                        // push ebx
+                        // push ebx
+                        // call [0x40a0ac]  ;kernel32.dll!GetModuleHandleA
+                        // push eax
+                        // call 0x408140 ; WinMain
+                        pattern: Regex::new(r"(?-u)\x50\x56\x53\x53\xFF\x15..\x40\x00\x50\xE8....").unwrap(),
+                        refcount: 0,
+                        crc16_len: 0,
+                        sig_crc16: 0,
+                        total_length: 15,
+                        offset: 0,
+                        references: vec![
+                            FlirtRef {
+                                offset: 11,
+                                refkind: RefKind::Local,
+                                public: true,
+                                name: String::from("_WinMain"),
+                            }
+                        ], 
+                    });
+                x86_32_pe_msvc.insert(
+                    String::from("_WinMain_1"),
+                    FlirtSignature{ 
+                        name: String::from("_WinMain"), 
+                            // push eax
+                            // push [ebp+lpCmdLine] 
+                            // push esi
+                            // push esi
+                            // call [0x40a0ac]  ;kernel32.dll!GetModuleHandleA
+                            // push eax
+                            // call 0x408140 ; WinMain
+                        pattern: Regex::new(r"(?-u)\x50\xFF\x75\x9C\x56\x56\xFF\x15..[\x40-\x4F]\x00\x50\xE8....").unwrap(),
+                        refcount: 0,
+                        crc16_len: 0,
+                        sig_crc16: 0,
+                        total_length: 17,
+                        offset: 0,
+                        references: vec![
+                            FlirtRef {
+                                offset: 13,
+                                refkind: RefKind::Local,
+                                public: true,
+                                name: String::from("_WinMain"),
+                            }
+                        ], 
+                    });
+                x86_32_pe_msvc.insert(
+                    String::from("_main_0"),
+                    // CRT
+                    FlirtSignature{ 
+                        name: String::from("_main"), 
+                            //call    __p___wargv
+                            //mov     edi, eax
+                            //call    __p___argc
+                            //mov     esi, eax
+                            //call    _get_initial_wide_environment
+                            //push    eax             ; envp
+                            //push    dword ptr [edi] ; argv
+                            //push    dword ptr [esi] ; argc
+                            //call    _main
+                        pattern: Regex::new(r"(?-u)\xE8\xBD\x09\x00\x00\x8B\xF8\xE8\xBD\x09\x00\x00\xE8\xB5\x09\x00\x00\x50\xFF\x37\xFF\x36\xE8....").unwrap(),
+                        refcount: 0,
+                        crc16_len: 0,
+                        sig_crc16: 0,
+                        total_length: 25,
+                        offset: 0,
+                        references: vec![
+                            FlirtRef {
+                                offset: 0,
+                                refkind: RefKind::Local,
+                                public: true,
+                                name: String::from("__p___wargv"),
+                            },
+                            FlirtRef {
+                                offset: 6,
+                                refkind: RefKind::Local,
+                                public: true,
+                                name: String::from("__p___argc"),
+                            },
+                            FlirtRef {
+                                offset: 11,
+                                refkind: RefKind::Local,
+                                public: true,
+                                name: String::from("_get_initial_wide_environment"),
+                            },
+                            FlirtRef {
+                                offset: 21,
+                                refkind: RefKind::Local,
+                                public: true,
+                                name: String::from("_main"),
+                            }
+                        ], 
+                    });
+                 x86_32_pe_msvc.insert(
+                    String::from("_main_1"),
+                    FlirtSignature{ 
+                        name: String::from("_main"),
+                        //A1 D0 32 4A 00          mov     eax, envp
+                        //A3 F0 32 4A 00          mov     dword_4A32F0, eax
+                        //50                      push    eax             ; envp
+                        //FF 35 C8 32 4A 00       push    argv            ; argv
+                        //FF 35 C4 32 4A 00       push    argc            ; argc
+                        //E8 49 33 FD FF          call    _main 
+                        pattern: Regex::new(r"(?-u)\xA1....\xA3....\x50\xFF\x35....\xFF\x35....\xE8....").unwrap(),
+                        refcount: 0,
+                        crc16_len: 0,
+                        sig_crc16: 0,
+                        total_length: 26,
+                        offset: 0,
+                        references: vec![
+                            FlirtRef {
+                                offset: 24,
+                                refkind: RefKind::Local,
+                                public: true,
+                                name: String::from("_main"),
+                            }
+                        ], 
+                    });
+                self.flirts.append(&mut x86_32_pe_msvc);
+            }
+            _=>{},
+        }
     }
 }

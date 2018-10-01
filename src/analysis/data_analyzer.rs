@@ -400,3 +400,10 @@ fn check_for_jump(
     }
     return false;
 }
+
+/*fn scan_function_blocks(
+    analysis: &mut Analysisx86)
+{
+
+}
+*/
