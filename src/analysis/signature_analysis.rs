@@ -11,7 +11,7 @@ use std::collections::BTreeMap;
 use std::io::{BufRead, BufReader};
 use std::fs::File;
 use glob::glob;
-use crc::crc16;
+//use crc::crc16;
 
 pub struct Signature<'a>{
     pub name: &'static str,
@@ -278,7 +278,7 @@ impl SigAnalyzer
             _last_known_len = known.len();
             if _last_known_len == 0 {
                 for (name, flirtsig) in self.flirts.iter() {
-                    println!("SIG: {}", name);
+                    debug!("flirt_match: SIG: {}", name);
                     for mat in flirtsig.pattern.find_iter(bytes) { // can use find iter, because no named groups
                         //if flirtsig.sig_crc16 == crc16::checksum_usb(&bytes[32..32+flirtsig.crc16_len]) {
                             let fm = FlirtMatch {
@@ -392,7 +392,7 @@ impl SigAnalyzer
                         // call [0x40a0ac]  ;kernel32.dll!GetModuleHandleA
                         // push eax
                         // call 0x408140 ; WinMain
-                        pattern: Regex::new(r"(?-u)\x50\x56\x53\x53\xFF\x15..\x40\x00\x50\xE8....").unwrap(),
+                        pattern: Regex::new(r"(?-u)\x50\x56\x53\x53\xFF\x15..[\x40-\x4F]\x00\x50\xE8....").unwrap(),
                         refcount: 0,
                         crc16_len: 0,
                         sig_crc16: 0,
@@ -447,11 +447,11 @@ impl SigAnalyzer
                             //push    dword ptr [edi] ; argv
                             //push    dword ptr [esi] ; argc
                             //call    _main
-                        pattern: Regex::new(r"(?-u)\xE8\xBD\x09\x00\x00\x8B\xF8\xE8\xBD\x09\x00\x00\xE8\xB5\x09\x00\x00\x50\xFF\x37\xFF\x36\xE8....").unwrap(),
+                        pattern: Regex::new(r"(?-u)\xE8..\x00\x00\x8B\xF8\xE8..\x00\x00\x8B\xF0\xE8..\x00\x00\x50\xFF\x37\xFF\x36\xE8....").unwrap(),
                         refcount: 0,
                         crc16_len: 0,
                         sig_crc16: 0,
-                        total_length: 25,
+                        total_length: 29,
                         offset: 0,
                         references: vec![
                             FlirtRef {
@@ -461,19 +461,19 @@ impl SigAnalyzer
                                 name: String::from("__p___wargv"),
                             },
                             FlirtRef {
-                                offset: 6,
+                                offset: 7,
                                 refkind: RefKind::Local,
                                 public: true,
                                 name: String::from("__p___argc"),
                             },
                             FlirtRef {
-                                offset: 11,
+                                offset: 14,
                                 refkind: RefKind::Local,
                                 public: true,
                                 name: String::from("_get_initial_wide_environment"),
                             },
                             FlirtRef {
-                                offset: 21,
+                                offset: 24,
                                 refkind: RefKind::Local,
                                 public: true,
                                 name: String::from("_main"),
@@ -494,11 +494,11 @@ impl SigAnalyzer
                         refcount: 0,
                         crc16_len: 0,
                         sig_crc16: 0,
-                        total_length: 26,
+                        total_length: 27,
                         offset: 0,
                         references: vec![
                             FlirtRef {
-                                offset: 24,
+                                offset: 23,
                                 refkind: RefKind::Local,
                                 public: true,
                                 name: String::from("_main"),

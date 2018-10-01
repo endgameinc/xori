@@ -17,6 +17,7 @@ use arch::x86::analyzex86::*;
 use arch::x86::cpux86::*;
 use analysis::formats::peloader::*;
 use analysis::signature_analysis::SigAnalyzer;
+use analysis::data_analyzer::scan_for_function_blocks;
 
 pub const STACK_ADDRESS: u64 = 0x200000;
 pub const MAX_LOOPS: usize = 10;
@@ -302,14 +303,7 @@ fn disassemble_init(
                     // Retroactively set the size
                     mem_image.size = mem_image.binary.len();
 
-                    // Match FLIRTS on everything
-                    // All offsets relative to mem_image.binary
-                    let flirt; 
-                    if _config.x86.flirt_enabled {
-                       flirt = analysis.sig_analyzer.flirt_match(&mem_image.binary);
-                       println!("EXPERIMENTAL FLIRT SIG MATCHES\n{:?}",flirt);
-                    }
-
+                    
                     // Create bounds for Non-Executable sections to ignore
                     ignore_section_data(&mut analysis);
 
@@ -483,9 +477,11 @@ fn disassemble_init(
             }
 
             // Function Block Renaming
-            // 1) is # of functions > 0
-            // 2) search all code block starts
-            // 3) Apply search
+            if _config.x86.flirt_enabled {
+                scan_for_function_blocks(
+                    &mut analysis, 
+                    &mut mem_manager);
+            }
 
             return Some(analysis);      
         },

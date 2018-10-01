@@ -401,9 +401,53 @@ fn check_for_jump(
     return false;
 }
 
-/*fn scan_function_blocks(
-    analysis: &mut Analysisx86)
+pub fn scan_for_function_blocks(
+    analysis: &mut Analysisx86,
+    mem_manager: &mut MemoryManager)
 {
+    let flirt = analysis.sig_analyzer.flirt_match(&mem_manager.get_image_by_type(MemoryType::Image));
+    debug!("EXPERIMENTAL FLIRT SIG MATCHES\n{:?}",flirt);
+    if flirt.len() == 0 && analysis.functions.len() == 0
+    {
+        return;
+    }
 
+    for (key, entry) in flirt
+    {
+        match analysis.sig_analyzer.flirts.get(&key)
+        {
+            Some(sig)=>{
+                if sig.references.len() > 0
+                {
+                    for reference in sig.references.iter()
+                    {
+                        let offset = (reference.offset + entry[0] + analysis.base) as u64;
+                        debug!("scan_for_function_blocks: name: {} offset: 0x{:x}", reference.name, offset);
+                        // Rename Function
+                        for func in analysis.functions.iter_mut()
+                        {
+                            if func.xrefs.get(&offset).is_some()                                            
+                            {
+                                func.name = reference.name.clone();
+                            }
+                        }
+                        // Add comment in instr_info
+                        match analysis.instr_info.get_mut(&offset)
+                        {
+                            Some(instr_info)=>{
+                                instr_info.detail = vec![DetailInfo
+                                {
+                                    op_index: 0,
+                                    contents: reference.name.clone(),
+                                }];
+                            },
+                            None=>{},
+                        }
+                    }
+                }
+            },
+            None=>{},
+        }
+    }
 }
-*/
+
