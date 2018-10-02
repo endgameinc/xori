@@ -480,8 +480,21 @@ pub fn rename_indirect_calls(
         match update_functions.get(&func.address)
         {
             Some(f)=>{
-                let new_name: Vec<_> = f.split('!').collect();
-                func.name = new_name[1].to_string();
+                if f.contains("__imp_")
+                {
+                    func.name = f.clone();
+                } 
+                else
+                {
+                    let new_name: Vec<_> = f.split('!').collect();
+                    if new_name.len() > 1
+                    {
+                        func.name = new_name[1].to_string();
+                    } else {
+                        func.name = f.clone();
+                    }
+                }
+                
                 // Update all references
                 for xref in func.xrefs.iter()
                 {
