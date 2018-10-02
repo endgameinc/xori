@@ -4,6 +4,7 @@ use arch::x86::archx86::X86Detail;
 use arch::x86::analyzex86::*;
 pub use disasm::*;
 use std::collections::VecDeque;
+use std::collections::BTreeMap;
 
 // 1) Determine if data
 // - Consecutive zeros 
@@ -447,6 +448,57 @@ pub fn scan_for_function_blocks(
                 }
             },
             None=>{},
+        }
+    }
+}
+
+pub fn rename_indirect_calls(
+    analysis: &mut Analysisx86)
+{
+    let mut update_functions: BTreeMap<u64, String> = BTreeMap::new();
+    for func in analysis.functions.iter()
+    {
+        println!("func {:?}", func.name);
+        if func.mem_type == MemoryType::Import
+        {
+            for xref in func.xrefs.iter()
+            {
+                for pfunc in analysis.functions.iter()
+                {
+                    if *xref == pfunc.address
+                    {
+                        update_functions.insert(pfunc.address, func.name.clone());
+                        update_functions.insert(func.address, format!("__imp_{}", func.name));
+                    }
+                }
+            }
+        }
+    }
+
+    for func in analysis.functions.iter_mut()
+    {
+        match update_functions.get(&func.address)
+        {
+            Some(f)=>{
+                let new_name: Vec<_> = f.split('!').collect();
+                func.name = new_name[1].to_string();
+                // Update all references
+                for xref in func.xrefs.iter()
+                {
+                    match analysis.instr_info.get_mut(&xref)
+                    {
+                        Some(instr_info)=>{
+                            instr_info.detail = vec![DetailInfo
+                            {
+                                op_index: 0,
+                                contents: func.name.clone(),
+                            }];
+                        },
+                        None=>{},
+                    }
+                }
+            },
+            _=>{},
         }
     }
 }

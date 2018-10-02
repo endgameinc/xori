@@ -1709,7 +1709,7 @@ fn get_imports(
         let (import_addresses, addr_mask, voffset) = match header.mode 
         {
             Mode::Mode32=>{
-                match import_address_table32(&input[rva_to_file_offset(import_descriptor.original_first_thunk as usize, &section_table,)..],)
+                match import_address_table32(&input[rva_to_file_offset(import_descriptor.first_thunk as usize, &section_table,)..],)
                 {
                     Ok((_i, import_lookup)) => {
                         let mut generic: Vec<u64> = Vec::new();
@@ -1723,7 +1723,7 @@ fn get_imports(
                 }
             },
             Mode::Mode64=>{
-                match import_address_table64(&input[rva_to_file_offset(import_descriptor.original_first_thunk as usize, &section_table,)..],)
+                match import_address_table64(&input[rva_to_file_offset(import_descriptor.first_thunk as usize, &section_table,)..],)
                 {
                     Ok((_i, import_lookup)) => (import_lookup.elements, 0x8000000000000000, 8u64),
                     Err(err)=> return Err(format!("{:?}", err)),
@@ -1751,6 +1751,7 @@ fn get_imports(
             } else {
                 new_ordinal = (addr ^ addr_mask) as u64;
             }
+
             let import_value = ImportAddressValue{
                 ord: new_ordinal,
                 func_name: import_function_name,

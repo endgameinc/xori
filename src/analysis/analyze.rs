@@ -17,7 +17,7 @@ use arch::x86::analyzex86::*;
 use arch::x86::cpux86::*;
 use analysis::formats::peloader::*;
 use analysis::signature_analysis::SigAnalyzer;
-use analysis::data_analyzer::scan_for_function_blocks;
+use analysis::data_analyzer::{scan_for_function_blocks, rename_indirect_calls};
 
 pub const STACK_ADDRESS: u64 = 0x200000;
 pub const MAX_LOOPS: usize = 10;
@@ -482,6 +482,9 @@ fn disassemble_init(
                     &mut analysis, 
                     &mut mem_manager);
             }
+
+            rename_indirect_calls(
+                &mut analysis);
 
             return Some(analysis);      
         },
