@@ -11,8 +11,8 @@ use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use num::{Num, NumCast};
 use num::traits::AsPrimitive;
-use std::num::Wrapping;
-use std::ops::BitOr;
+//use std::num::Wrapping;
+//use std::ops::BitOr;
 use std::ops::Bound::Included;
 
 const CHUNK_SIZE: usize = 100; // 15 bytes

@@ -4,6 +4,7 @@ use arch::x86::archx86::X86Detail;
 use arch::x86::analyzex86::*;
 pub use disasm::*;
 use std::collections::VecDeque;
+use std::collections::BTreeMap;
 
 // 1) Determine if data
 // - Consecutive zeros 
@@ -400,3 +401,118 @@ fn check_for_jump(
     }
     return false;
 }
+
+pub fn scan_for_function_blocks(
+    analysis: &mut Analysisx86,
+    mem_manager: &mut MemoryManager)
+{
+    let flirt = analysis.sig_analyzer.flirt_match(&mem_manager.get_image_by_type(MemoryType::Image));
+    debug!("EXPERIMENTAL FLIRT SIG MATCHES\n{:?}",flirt);
+    if flirt.len() == 0 && analysis.functions.len() == 0
+    {
+        return;
+    }
+
+    for (key, entry) in flirt
+    {
+        match analysis.sig_analyzer.flirts.get(&key)
+        {
+            Some(sig)=>{
+                if sig.references.len() > 0
+                {
+                    for reference in sig.references.iter()
+                    {
+                        let offset = (reference.offset + entry[0] + analysis.base) as u64;
+                        debug!("scan_for_function_blocks: name: {} offset: 0x{:x}", reference.name, offset);
+                        // Rename Function
+                        for func in analysis.functions.iter_mut()
+                        {
+                            if func.xrefs.get(&offset).is_some()                                            
+                            {
+                                func.name = reference.name.clone();
+                            }
+                        }
+                        // Add comment in instr_info
+                        match analysis.instr_info.get_mut(&offset)
+                        {
+                            Some(instr_info)=>{
+                                instr_info.detail = vec![DetailInfo
+                                {
+                                    op_index: 0,
+                                    contents: reference.name.clone(),
+                                }];
+                            },
+                            None=>{},
+                        }
+                    }
+                }
+            },
+            None=>{},
+        }
+    }
+}
+
+pub fn rename_indirect_calls(
+    analysis: &mut Analysisx86)
+{
+    let mut update_functions: BTreeMap<u64, String> = BTreeMap::new();
+    for func in analysis.functions.iter()
+    {
+        println!("func {:?}", func.name);
+        if func.mem_type == MemoryType::Import
+        {
+            for xref in func.xrefs.iter()
+            {
+                for pfunc in analysis.functions.iter()
+                {
+                    if *xref == pfunc.address
+                    {
+                        update_functions.insert(pfunc.address, func.name.clone());
+                        update_functions.insert(func.address, format!("__imp_{}", func.name));
+                    }
+                }
+            }
+        }
+    }
+
+    for func in analysis.functions.iter_mut()
+    {
+        match update_functions.get(&func.address)
+        {
+            Some(f)=>{
+                if f.contains("__imp_")
+                {
+                    func.name = f.clone();
+                } 
+                else
+                {
+                    let new_name: Vec<_> = f.split('!').collect();
+                    if new_name.len() > 1
+                    {
+                        func.name = new_name[1].to_string();
+                    } else {
+                        func.name = f.clone();
+                    }
+                }
+                
+                // Update all references
+                for xref in func.xrefs.iter()
+                {
+                    match analysis.instr_info.get_mut(&xref)
+                    {
+                        Some(instr_info)=>{
+                            instr_info.detail = vec![DetailInfo
+                            {
+                                op_index: 0,
+                                contents: func.name.clone(),
+                            }];
+                        },
+                        None=>{},
+                    }
+                }
+            },
+            _=>{},
+        }
+    }
+}
+
