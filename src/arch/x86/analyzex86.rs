@@ -91,14 +91,29 @@ impl Analysisx86
         left: i64,
         right: i64)
     {
+        let mut is_local_function = false;
+        for func in self.functions.iter_mut()
+        {
+            if func.address == right as u64 && left == 0
+            {
+                is_local_function = true;
+                func.xrefs.insert(offset);
+            }
+        }
         for func in self.functions.iter_mut()
         {
             if func.address == *address{
+                if (left == 0 && right == 0) || is_local_function
+                {
+                    // add it as a return for non conditional jump
+                    func.returns.insert(offset);
+                }
                 func.jumps.insert(offset, Jump
-                    {
-                        left: left,
-                        right: right,
-                    });
+                {
+                    left: left,
+                    right: right,
+                });
+                
                 return; 
             }
         }
@@ -128,15 +143,14 @@ impl Analysisx86
         for func in self.functions.iter_mut()
         {
             if func.address == *address{
+                func.returns.insert(offset);
                 match func.return_values.get(&value)
                 {
                     Some(rval)=>{
                         debug!("return is 0x{:x}", value);
-                        func.returns.insert(offset);
                         return (true, *rval);
                     }
                     None=>{
-                        func.returns.insert(offset);
                         return (false, 0); 
                     }
                 }
@@ -195,7 +209,10 @@ impl Analysisx86
         // Specific OS based requirements here
         match self.header.binary_type
         {
-            BinaryType::PE=>
+            BinaryType::PE |
+            BinaryType::PEEXE | 
+            BinaryType::PEDLL | 
+            BinaryType::PESYS =>
             {
                 // check if the function is on the IAT
                 match self.header.import_table{
@@ -264,6 +281,9 @@ impl Analysisx86
             },
             _=>{},
         }
+
+        // If the jump is a function that already exists
+
         // If the instruction is a jump
         if import_only
         {
@@ -407,6 +427,7 @@ pub enum MemoryType
     Peb,
     Library,
     ExportDir,
+    Handler,
 }
 
 #[derive(Debug)]

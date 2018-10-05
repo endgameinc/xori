@@ -10,6 +10,52 @@ type DWORD = u32;
 type WORD = u16;
 type BYTE = u8;
 
+pub enum ImageCharacteristics
+{
+    ImageFileRelocsStripped = 0x0001, //Relocation information was stripped from the file. The file must be loaded at its preferred base address. If the base address is not available, the loader reports an error.
+    ImageFileExecutableImage = 0x0002, //The file is executable (there are no unresolved external references).
+    ImageFileLineNumsStripped = 0x0004, //COFF line numbers were stripped from the file.
+    ImageFileLocalSymsStripped = 0x0008, //COFF symbol table entries were stripped from file.
+    ImageFileAggresiveWsTrim = 0x0010, //Aggressively trim the working set. This value is obsolete.
+    ImageFileLargeAddressAware = 0x0020, //The application can handle addresses larger than 2 GB.
+    ImageFileBytesReversedLo = 0x0080, //The bytes of the word are reversed. This flag is obsolete.
+    ImageFile32bitMachine = 0x0100, // The computer supports 32-bit words.
+    ImageFileDebugStripped = 0x0200, //Debugging information was removed and stored separately in another file.
+    ImageFileRemovableRunFromSwap = 0x0400, //If the image is on removable media, copy it to and run it from the swap file.
+    ImageFileNetRunFromSwap = 0x0800,  //If the image is on the network, copy it to and run it from the swap file.
+    ImageFileSystem = 0x1000, //The image is a system file.
+    ImageFileDll = 0x2000, //The image is a DLL file. While it is an executable file, it cannot be run directly.
+    ImageFileUpSystemOnly = 0x4000, //The file should be run only on a uniprocessor computer.
+    ImageFileBytesReversedHi = 0x8000, //The bytes of the word are reversed. This flag is obsolete.
+} 
+
+pub enum UnwindFlags
+{
+    EHandler=0x01, //The function has an exception handler that should be called when looking for functions that need to examine exceptions.
+    UHandler=0x02, //The function has a termination handler that should be called when unwinding an exception.
+    ChainInfo=0x04, //This unwind info structure is not the primary one for the procedure.
+}
+
+#[derive(Debug,Serialize,Deserialize)]
+pub struct UnwindInfo {
+    pub ver_flags: u8,  //UBYTE Version: 3; UBYTE Flags: 5;
+    pub prolog_size: u8, 
+    pub count: u8, 
+    pub frame_register: u8,
+}
+
+#[derive(Debug,Serialize,Deserialize)]
+pub struct RuntimeFunction {
+    pub function_start: u32, // offset rva
+    pub function_end: u32, // offset rva pastend
+    pub unwind_info: u32, // offset rva
+}
+
+#[derive(Debug,Serialize,Deserialize)]
+pub struct RuntimeFunctions {
+    pub runtime_functions: Vec<RuntimeFunction>
+}
+
 #[derive(Clone,Copy,Debug,Serialize,Deserialize)]
 pub struct ImageData {
     pub virtual_address: u32,
@@ -677,4 +723,41 @@ pub fn rva_to_file_offset(rva: usize, section_table: &SectionTable) -> usize {
         }
     }
     return 0;
+}
+
+pub fn unwind_info(input: &[u8]) -> IResult<&[u8], UnwindInfo>
+{
+    do_parse!(input,
+        ver_flags: le_u8 >>
+        prolog_size: le_u8 >>
+        count: le_u8 >>
+        frame_register: le_u8 >>
+        ( UnwindInfo {
+            ver_flags: ver_flags,
+            prolog_size: prolog_size,
+            count: count,
+            frame_register: frame_register,
+        })
+        )
+}
+
+pub fn runtime_functions64(input: &[u8]) -> IResult<&[u8], RuntimeFunctions>
+{
+    do_parse!(input,
+        elements: many_till!(runtime_function64, tag!(b"\0\0\0\0\0\0\0\0")) >>
+        (RuntimeFunctions {
+          runtime_functions: elements.0 // many_till produces a tuple, the second element would be the \0\0\0\0\0\0\0\0
+        })
+        )
+}
+
+pub fn runtime_function64(input: &[u8]) -> IResult<&[u8], RuntimeFunction> {
+    do_parse!(input,
+        function_start: le_u32 >>
+        function_end: le_u32 >>
+        unwind_info: le_u32 >> (RuntimeFunction {
+        function_start: function_start,
+        function_end: function_end,
+        unwind_info: unwind_info, 
+    }))
 }

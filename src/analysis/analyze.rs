@@ -26,6 +26,10 @@ pub const MAX_LOOPS: usize = 10;
 pub enum BinaryType{
     BIN, //Default case
     PE,
+    PEEXE,
+    PEDLL,
+    PENET,
+    PESYS,
     ELF,
     MACHO,
 }
@@ -121,6 +125,7 @@ impl Header
             },
             BinaryType::ELF=>return Err(format!("ELF is not supported yet")),
             BinaryType::MACHO=>return Err(format!("MACHO is not supported yet")),
+            _=>return Err(format!("Unsupported format")),
         }
         return Ok(0);
     }
@@ -192,19 +197,17 @@ fn disassemble_init(
     _binary: &mut [u8],
     _config: &Config) -> Option<Analysisx86>
 {
-    // Handle Image Building
-    let mut new_binary = MmapMut::map_anon(_header.size_of_image as usize)
-        .expect("failed to map the file");
-
-    // Needed for PE Lifetime
-    let mut _teb: Vec<u8> = Vec::new();
-    let mut _peb: Vec<u8> = Vec::new();
-    let mut _lib_header: Vec<u8> = Vec::new();
-
     debug!("disassemble()");
     match *_arch{
         Arch::ArchX86 =>
         {
+            // Needed for PE Lifetime
+            // Handle Image Building
+            let mut new_binary = MmapMut::map_anon(_header.size_of_image as usize)
+                .expect("failed to map the file");
+            let mut teb: Vec<u8> = Vec::new();
+            let mut peb: Vec<u8> = Vec::new();
+
             let mut analysis_queue: VecDeque<Statex86> = VecDeque::new();
             let mut mem_manager: MemoryManager = MemoryManager{ list: Vec::new() };
             let mut analysis: Analysisx86 = Analysisx86 
@@ -262,111 +265,22 @@ fn disassemble_init(
 
             match analysis.header.binary_type
             {
-                BinaryType::PE=>
+                BinaryType::PE |
+                BinaryType::PEEXE | 
+                BinaryType::PEDLL | 
+                BinaryType::PESYS | 
+                BinaryType::PENET =>
                 {           
-                    println!("BUILDING IMAGE MEMORY:");
-
-                    // Initialize memorybounds for the main binary
-                    let mut mem_image = MemoryBounds
-                    {
-                        base_addr: analysis.base,
-                        size: 0,
-                        mem_type: MemoryType::Image,
-                        binary: match build_image(_binary, &analysis.header, &mut new_binary)
-                        {
-                            (true, false)=>new_binary.as_mut(),
-                            (true, true)=>{
-                                // for corrupted images
-                                debug!("Image is corrupted, setting entry_point to image base");
-                                if code_start > (analysis.base + new_binary.len())
-                                {
-                                    state.offset = analysis.base;
-                                } else {
-                                    state.offset = code_start;
-                                }
-                                new_binary.as_mut()
-                            },
-                            (false, false)=>_binary,
-                            (false, true)=>{
-                                // for corrupted images
-                                debug!("Image is corrupted, setting entry_point to image base");
-                                if code_start > (analysis.base + _binary.len())
-                                {
-                                    state.offset = analysis.base;
-                                } else {
-                                    state.offset = code_start;
-                                }
-                                _binary
-                            },
-                        },
-                    };
-                    // Retroactively set the size
-                    mem_image.size = mem_image.binary.len();
-
-                    
-                    // Create bounds for Non-Executable sections to ignore
-                    ignore_section_data(&mut analysis);
-
-                    // PE only Build DLL addresses
-                    println!("BUILDING DLL IMPORTS:");
-                    build_dll_import_addresses(
+                    build_pe(
+                        _config,
+                        _binary,
+                        &mut new_binary,
+                        &mut teb,
+                        &mut peb,
+                        &mut state,
                         &mut analysis,
-                        &mut mem_image,
                         &mut mem_manager,
-                        _config);
-
-                    mem_manager.list.push(mem_image);
-
-                    //Build NTDLL & Kernel32 memory spaces
-                    build_dll_memory(&mut analysis, &mut mem_manager);
-
-                    //Build the TIB/PEB
-                    let teb_addr = get_teb_addr_config(
-                                _config, 
-                                &analysis.xi.mode) as usize;
-                    _teb = build_teb(&mut analysis, _config).to_owned();
-
-                    mem_manager.list.push(MemoryBounds
-                    {
-                        base_addr: teb_addr,
-                        size: _teb.len(),
-                        mem_type: MemoryType::Teb,
-                        binary: &mut _teb,
-                    });
-                    
-                    let peb_addr = get_peb_addr_config(
-                                _config, 
-                                &analysis.xi.mode) as usize;
-
-                    _peb = build_peb(&mut analysis, _config).to_owned();
-
-                    // Initialize memorybounds for the Peb
-                    mem_manager.list.push(MemoryBounds
-                    {
-                        base_addr: peb_addr,
-                        size: _peb.len(),
-                        mem_type: MemoryType::Peb,
-                        binary: &mut _peb,
-                    });
-
-                    // Get virtual address of kernel32!BaseThreadInitThunk and assign to eax
-                    state.cpu.regs.eax.value = get_inital_eax(&mut analysis);
-                    
-                    // Get the FS/GS Registers
-                    match analysis.xi.mode
-                    {
-                        Mode::Mode32=>{
-                            state.cpu.segments.fs = get_teb_addr_config(
-                                _config, 
-                                &analysis.xi.mode) as i64;
-                        },
-                        Mode::Mode64=>{
-                            state.cpu.segments.gs = get_teb_addr_config(
-                                _config, 
-                                &analysis.xi.mode) as i64;
-                        }
-                        _=>{},
-                    }
+                        &mut analysis_queue);
                 },
                 _=>
                 {
@@ -601,7 +515,11 @@ pub fn analyze(
                 None=>{},
             }
         },
-        BinaryType::PE=>
+        BinaryType::PE |
+        BinaryType::PEEXE | 
+        BinaryType::PEDLL | 
+        BinaryType::PESYS | 
+        BinaryType::PENET =>
         {
             debug!("Identified PE");
             // parse
