@@ -122,7 +122,14 @@ static X86_64_PE: [Signature; 2] = [
             r"\x40\x53\x48\x83\xEC.", //push rbx, sub rsp, 60h
             r"\x48\x83\xEC..", //sub rsp, 28h
             r"\x48\x89\x5C\x24.", //mov [rsp+arg_8],rbx 
-            r"\x48\x81\xEC....", //sub rsp, 168h 
+            r"\x48\x81\xEC....", //sub rsp, 168h,
+            r"\xFF\xF5\x41\x54\x41\x55\x41\x56", //push rbp, push r12, push r13, push r14
+            r"\x45\x33\xD2", //xor r10d, r10d
+            r"\x45\x85\xC9", // test r9d, r9d
+            r"\x48\x85\xC9", //test    rcx, rcx
+            r"\x4C..\x53\x57\x48\x81....", //  mov r11, rsp, push rbx, push rdi, sub rsp, 118h
+            r"\x4C..\x49...\x56\x48\x81....", //mov, mov, push, sub rsp
+            r"\xff\xf3\x48\x83.." //push rbx, sub rsp
         ],
     },
     Signature{ 

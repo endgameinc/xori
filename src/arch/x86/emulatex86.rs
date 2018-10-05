@@ -321,7 +321,7 @@ fn check_forward_loop_counter(
                 *_branch_is_taken = true;
                 return (true, Some(i));
             } else if *_branch_is_taken {
-            	loop_entry.loop_count=0;
+                loop_entry.loop_count=0;
                 return (true, None);
 
             } else if !*_branch_is_taken{
@@ -357,7 +357,7 @@ fn check_backward_loop_exists(
                 //debug!("\tJump is taken at 0x{:x} -> 0x{:x} count {}", _offset, _right_destination, loop_entry.loop_count);
                 return (true, None);
             } else if !*_branch_is_taken{
-            	loop_entry.loop_count=0;
+                loop_entry.loop_count=0;
                 //debug!("\tJump is NOT taken at 0x{:x}", _offset);
                 return (true, None);
             }
@@ -2803,7 +2803,7 @@ pub fn check_branch_instructions(
         },
         InstrOpTypex86::Imm=>{
             let destination: i64 = _instr.instr.detail.operands()[0].imm;
-            _right_destination = destination; 
+            _right_destination = destination;
         },
         InstrOpTypex86::Mem=>{
             let (_address, destination) = get_memory_operand(
@@ -2873,7 +2873,7 @@ pub fn check_branch_instructions(
     let mut new_loop_state = _state.loop_state.clone();
 
     if _state.emulation_enabled{
-    	propogate_loop(
+        propogate_loop(
         &is_branch,
         &_offset,
         &_next_instruction,
@@ -2882,13 +2882,13 @@ pub fn check_branch_instructions(
         &mut _right_destination,
         _mem_manager,
         _state);
-    	new_loop_state = _state.loop_state.clone();
+        new_loop_state = _state.loop_state.clone();
         //debug!("\t0x{:x} {:?} LEFT: 0x{:x}, RIGHT: 0x{:x}, taken: {} LOOP: {}", 
-        //	_offset, is_branch, 
-        //	_left_destination, 
-        //	_right_destination, 
-        //	_branch_is_taken, 
-        //	_state.loop_state.is_loop);
+        //    _offset, is_branch, 
+        //    _left_destination, 
+        //    _right_destination, 
+        //    _branch_is_taken, 
+        //    _state.loop_state.is_loop);
     }
     
     let left_analysis: Option<Statex86> = Some(Statex86 

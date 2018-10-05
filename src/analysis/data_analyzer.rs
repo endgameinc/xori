@@ -458,7 +458,6 @@ pub fn rename_indirect_calls(
     let mut update_functions: BTreeMap<u64, String> = BTreeMap::new();
     for func in analysis.functions.iter()
     {
-        println!("func {:?}", func.name);
         if func.mem_type == MemoryType::Import
         {
             for xref in func.xrefs.iter()
