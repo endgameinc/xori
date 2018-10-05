@@ -3,8 +3,19 @@ import React from 'react'
 import dagreD3 from 'dagre-d3'
 import './CFGView.css'
 import classnames from 'classnames'
-
+import { encode } from '../../encoding'
 import * as Mnemonics from '../linearDisassemblyView/mnemonic'
+
+
+const clickableMnemonics = new Set([ 'call', 'jmp' ])
+
+function isClickableElement(instruction) {
+  // call and jmp instructions which don't reference an import
+  return (
+    clickableMnemonics.has(instruction.instr.mnemonic) && instruction.detail[0].contents.indexOf('!') === -1
+  )
+}
+
 export default class CFGView extends React.PureComponent {
   cleanOldGraph() {
     console.log('clearing graph')
@@ -109,8 +120,9 @@ export default class CFGView extends React.PureComponent {
         var op_str = `<div style="display: inline-block;" class="op_str"> ${instruction.instr.op_str}&nbsp;</div>`
         var detail = ""
         // if a node has a comment, add that in too
-        if (instruction.detail.length > 0 && instruction.detail[0].contents)
-          detail += `<div style="display: inline-block; width: 300px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;" class="detail">;${instruction.detail[0].contents}</div>`
+        if (instruction.detail.length > 0 && instruction.detail[0].contents) {
+          detail += `<div style="display: inline-block; width: 300px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;" onclick="window.__publish_dagre_click(\'${ encode(instruction) }\')" class="detail ${ isClickableElement(instruction) ? 'clickable-mnemonic' : '' }">;${instruction.detail[0].contents}</div>`
+        }
         nodecontent += `
           <div>
             ${addr}${mnemonic}${op_str}${detail}
