@@ -49,6 +49,12 @@
   color: var(--detail-text-color);
 }
 
+.node div .detail.clickable-mnemonic {
+  cursor: pointer;
+  text-decoration: underline;
+  color: var(--instruction-call);
+}
+
 .node div .mnemonic {
   text-align: right;
   color: var(--disassembly-text-color);
