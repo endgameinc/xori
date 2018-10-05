@@ -5,6 +5,7 @@ use arch::x86::analyzex86::*;
 pub use disasm::*;
 use std::collections::VecDeque;
 use std::collections::BTreeMap;
+use std;
 
 // 1) Determine if data
 // - Consecutive zeros 
@@ -28,21 +29,32 @@ pub fn check_if_padding(
         _=>4,
     };
     let start = offset-analysis.base;
-    let end = start + address_size;
+    let region = mem_manager.get_image_by_type(MemoryType::Image);
+    let desired_end = start.checked_add(address_size)
+        .unwrap_or(std::usize::MAX);
+    let end = std::cmp::min(desired_end, region.len());
+
+    let expected_padding_size = end - start;
+
+    if expected_padding_size == 0 {
+        return (false, ((start / address_size) + 1) * address_size)
+    }
+
+    let tail_slice = &region[start..end];
+
     for padding in known_padding.iter()
     {
-        if mem_manager.get_image_by_type(MemoryType::Image)
-                [start..end] == *vec![*padding ; address_size].as_slice()
+        if *tail_slice == *vec![*padding; expected_padding_size]
         {
-            let code_start = analysis.base + analysis.header.base_of_code as usize;
-            let x = offset - code_start;
-            let mut y = (x / address_size) * address_size;
-            if y < x {
-                y = y + address_size;
-                new_offset = y + code_start;
-            }
-            return (true, new_offset);
-        }
+	    	let code_start = analysis.base + analysis.header.base_of_code as usize;
+	    	let x = offset - code_start;
+	    	let mut y = (x / address_size) * address_size;
+	    	if y < x {
+	    		y = y + address_size;
+	    		new_offset = y + code_start;
+	    	}
+	    	return (true, new_offset);
+	    }
     }
     return (false, new_offset);
 }
