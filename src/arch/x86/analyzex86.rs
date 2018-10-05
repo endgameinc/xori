@@ -107,13 +107,13 @@ impl Analysisx86
                 {
                     // add it as a return for non conditional jump
                     func.returns.insert(offset);
-                } else {
-                    func.jumps.insert(offset, Jump
-                    {
-                        left: left,
-                        right: right,
-                    });
                 }
+                func.jumps.insert(offset, Jump
+                {
+                    left: left,
+                    right: right,
+                });
+                
                 return; 
             }
         }
@@ -209,7 +209,10 @@ impl Analysisx86
         // Specific OS based requirements here
         match self.header.binary_type
         {
-            BinaryType::PE=>
+            BinaryType::PE |
+            BinaryType::PEEXE | 
+            BinaryType::PEDLL | 
+            BinaryType::PESYS =>
             {
                 // check if the function is on the IAT
                 match self.header.import_table{
