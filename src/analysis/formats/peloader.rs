@@ -10,6 +10,9 @@ use std::path::Path;
 use bincode::serialize;
 use encoding::all::UTF_16LE;
 use encoding::{Encoding, EncoderTrap};
+use std::collections::VecDeque;
+use std::collections::BTreeMap;
+use std::collections::BTreeSet;
 
 
 pub const TEB_ADDRESS_64: u64 = 0x7FFFFFDA000;
@@ -499,31 +502,31 @@ fn load_symbol(
 }
 
 fn get_export_rva(
-	import: &String,
+    import: &String,
     is_symbols: &mut bool,
-	function: &ImportAddressValue,
+    function: &ImportAddressValue,
     vaddr: u64,
-	function_symbols: &mut Vec<Symbol>) -> (u64, String)
+    function_symbols: &mut Vec<Symbol>) -> (u64, String)
 {
     //println!("{:?}", function);
-	for dll in function_symbols.iter_mut()
-	{
-		let dll_name = import.to_lowercase();
+    for dll in function_symbols.iter_mut()
+    {
+        let dll_name = import.to_lowercase();
         if dll.name.ends_with(&dll_name)
         {
             *is_symbols = true;
             dll.virtual_address = vaddr;
             dll.is_imported = true;
-        	for export in dll.exports.iter()
-        	{
-        	    if function.func_name == export.name
-        	    {
-        	    	return (export.rva, export.name.clone());
-        	    }
-        	}
+            for export in dll.exports.iter()
+            {
+                if function.func_name == export.name
+                {
+                    return (export.rva, export.name.clone());
+                }
+            }
         }
-	}
-	return (0, String::new());
+    }
+    return (0, String::new());
 }
 
 pub fn get_peb_addr_config(config: &Config, mode: &Mode) -> u64
@@ -668,8 +671,9 @@ pub fn get_dll_binary(
 }
 
 pub fn build_dll_import_addresses<'a>(
-	analysis: &mut Analysisx86,
+    analysis: &mut Analysisx86,
     mem_image: &mut MemoryBounds<'a>,
+    mem_manager: &mut MemoryManager,
     config: &Config)
 {
     println!("\tLOADING SYMBOLS");
@@ -705,22 +709,29 @@ pub fn build_dll_import_addresses<'a>(
                 import.virtual_address = vaddr;
                 for func in import.import_address_list.iter_mut()
                 {
-                	let (rva, func_name) = get_export_rva(
-                		&import.name,
+                    let (rva, func_name) = get_export_rva(
+                        &import.name,
                         &mut import.is_symbols, 
-                		&func, 
+                        &func, 
                         vaddr,
-                		&mut function_symbols);
+                        &mut function_symbols);
                     if rva != 0 
                     {
                         func.func_name = func_name;
-                    	func.virtual_address = Some(import.virtual_address + rva);
-                    	// Insert Address Into image
-                    	fill_in_address.push(
-                    		(func.ft_address as usize, 
-                    		(import.virtual_address + rva)));
+                        func.virtual_address = Some(import.virtual_address + rva);
+                        // Insert Address Into image
+                        fill_in_address.push(
+                            (func.ft_address as usize, 
+                            (import.virtual_address + rva)));
                     }
-                }            
+                }
+                // Add import memory bounds
+                mem_manager.list.push(MemoryBounds{
+                    base_addr: import.virtual_address as usize,
+                    size: VIRTUAL_ADDRESS_OFFSET as usize,
+                    mem_type: MemoryType::Import,
+                    binary: &mut [0u8; 0], // empty
+                });            
                 vaddr += VIRTUAL_ADDRESS_OFFSET;
             }
         }
@@ -789,7 +800,7 @@ pub fn build_image<'a>(
     {
         Some(ref sections)=>
         {
-        	_new_binary[.._header.file_alignment as usize].copy_from_slice(&_binary[.._header.file_alignment as usize]);
+            _new_binary[.._header.file_alignment as usize].copy_from_slice(&_binary[.._header.file_alignment as usize]);
             for section in sections.iter()
             {
                 let section_begin = section.virtual_address as usize;
@@ -1701,7 +1712,7 @@ fn get_imports(
         let (import_addresses, addr_mask, voffset) = match header.mode 
         {
             Mode::Mode32=>{
-                match import_address_table32(&input[rva_to_file_offset(import_descriptor.original_first_thunk as usize, &section_table,)..],)
+                match import_address_table32(&input[rva_to_file_offset(import_descriptor.first_thunk as usize, &section_table,)..],)
                 {
                     Ok((_i, import_lookup)) => {
                         let mut generic: Vec<u64> = Vec::new();
@@ -1715,7 +1726,7 @@ fn get_imports(
                 }
             },
             Mode::Mode64=>{
-                match import_address_table64(&input[rva_to_file_offset(import_descriptor.original_first_thunk as usize, &section_table,)..],)
+                match import_address_table64(&input[rva_to_file_offset(import_descriptor.first_thunk as usize, &section_table,)..],)
                 {
                     Ok((_i, import_lookup)) => (import_lookup.elements, 0x8000000000000000, 8u64),
                     Err(err)=> return Err(format!("{:?}", err)),
@@ -1743,6 +1754,7 @@ fn get_imports(
             } else {
                 new_ordinal = (addr ^ addr_mask) as u64;
             }
+
             let import_value = ImportAddressValue{
                 ord: new_ordinal,
                 func_name: import_function_name,
@@ -1761,7 +1773,7 @@ fn get_imports(
 
 pub fn get_pe_header(
     header: &mut Header,
-	binary: &mut [u8],
+    binary: &mut [u8],
     config: &Config) -> Result<i32, String>
 {
     debug!("get_pe_header()");
@@ -1778,6 +1790,10 @@ pub fn get_pe_header(
         &binary[pe_offset..]) 
     {
         Ok((cursor, pe_header))=> {
+            header.binary_type = match pe_header.coff_header.characteristics & (ImageCharacteristics::ImageFileDll as u16)
+                { x if x == ImageCharacteristics::ImageFileDll as u16=>BinaryType::PEDLL,
+                  _=>BinaryType::PEEXE,
+                };
             match pe_header.image_optional_header {
                 ImageOptionalHeaderKind::Pe32(ioh) =>
                 {
@@ -1794,6 +1810,7 @@ pub fn get_pe_header(
                     header.import_table = None;
                     header.size_of_image = ioh.size_of_image.into();
                     header.section_table = None;
+                    
                 },
                 ImageOptionalHeaderKind::Pe32Plus(ioh) =>
                 {
@@ -1857,4 +1874,209 @@ pub fn get_pe_header(
         _=>None,
     };
     return Ok(0);
+}
+
+fn parse_dll_functions64( 
+    analysis: &mut Analysisx86,
+    mem_manager: &mut MemoryManager) -> Vec<(usize, MemoryType)>
+{
+    let mut result: Vec<(usize, MemoryType)> = Vec::new();
+    match analysis.header.section_table
+    {
+        Some(ref sections)=>
+        {
+            for section in sections.iter()
+            {
+                if section.name.to_lowercase().contains(".pdata")
+                {
+                    let section_begin = section.virtual_address as usize;
+                    let runtime_functions: Vec<RuntimeFunction> = match runtime_functions64(
+                        &mem_manager.get_image_by_type(MemoryType::Image)[section_begin..])
+                    {
+                        Ok((_cursor, runtime_functions))=>runtime_functions.runtime_functions,
+                        Err(_)=>Vec::new(),
+                    };
+
+                    for func in runtime_functions
+                    {
+ 
+                        let unwind_offset: usize = func.unwind_info as usize;
+                        match unwind_info(&mem_manager.get_image_by_type(MemoryType::Image)[unwind_offset..])
+                        {
+                            Ok((_cursor, unwindinfo))=> {
+                                let flags = (unwindinfo.ver_flags >> 3) & 0x1F;
+                                let offset = func.function_start as usize + analysis.base;
+                                if flags == 0
+                                {
+                                    result.push((offset, MemoryType::Image));
+                                }
+                                else if flags < 4 && 0 < flags 
+                                {
+                                   result.push((offset, MemoryType::Handler));
+                                }
+                            },
+                            Err(_)=>{},
+                        }
+                    }
+                    
+                }
+            }
+        },
+        None=>{},
+    }
+    return result;
+}
+
+pub fn build_pe<'a>(
+    _config: &Config,
+    _binary: &'a mut [u8],
+    new_binary: &'a mut [u8],
+    _teb: &'a mut Vec<u8>,
+    _peb: &'a mut Vec<u8>,
+    state: &mut Statex86,
+    analysis: &mut Analysisx86,
+    mem_manager: &mut MemoryManager<'a>,
+    analysis_queue: &mut VecDeque<Statex86>)
+{
+    println!("BUILDING IMAGE MEMORY:");
+
+    // Initialize memorybounds for the main binary
+    let mut mem_image = MemoryBounds
+    {
+        base_addr: analysis.base,
+        size: 0,
+        mem_type: MemoryType::Image,
+        binary: match build_image(_binary, &analysis.header, new_binary)
+        {
+            (true, false)=>new_binary.as_mut(),
+            (true, true)=>{
+                // for corrupted images
+                debug!("Image is corrupted, setting entry_point to image base");
+                if (state.cpu.segments.cs as usize) > (analysis.base + new_binary.len())
+                {
+                    state.offset = analysis.base;
+                } else {
+                    state.offset = state.cpu.segments.cs as usize;
+                }
+                new_binary.as_mut()
+            },
+            (false, false)=>_binary,
+            (false, true)=>{
+                // for corrupted images
+                debug!("Image is corrupted, setting entry_point to image base");
+                if (state.cpu.segments.cs as usize) > (analysis.base + _binary.len())
+                {
+                    state.offset = analysis.base;
+                } else {
+                    state.offset = state.cpu.segments.cs as usize;
+                }
+                _binary
+            },
+        },
+    };
+    // Retroactively set the size
+    mem_image.size = mem_image.binary.len();
+
+    // Create bounds for Non-Executable sections to ignore
+    ignore_section_data(analysis);
+
+    // PE only Build DLL addresses
+    println!("BUILDING DLL IMPORTS:");
+    build_dll_import_addresses(
+        analysis,
+        &mut mem_image,
+        mem_manager,
+        _config);
+
+    mem_manager.list.push(mem_image);
+
+    //Build NTDLL & Kernel32 memory spaces
+    build_dll_memory(analysis, mem_manager);
+
+    //Build the TIB/PEB
+    let teb_addr = get_teb_addr_config(
+                _config, 
+                &analysis.xi.mode) as usize;
+    *_teb = build_teb(analysis, _config).to_owned();
+
+    mem_manager.list.push(MemoryBounds
+    {
+        base_addr: teb_addr,
+        size: _teb.len(),
+        mem_type: MemoryType::Teb,
+        binary: _teb,
+    });
+    
+    let peb_addr = get_peb_addr_config(
+                _config, 
+                &analysis.xi.mode) as usize;
+
+    *_peb = build_peb(analysis, _config).to_owned();
+
+    // Initialize memorybounds for the Peb
+    mem_manager.list.push(MemoryBounds
+    {
+        base_addr: peb_addr,
+        size: _peb.len(),
+        mem_type: MemoryType::Peb,
+        binary: _peb,
+    });
+
+    // Get virtual address of kernel32!BaseThreadInitThunk and assign to eax
+    state.cpu.regs.eax.value = get_inital_eax(analysis);
+    
+    // Get the FS/GS Registers
+    match analysis.xi.mode
+    {
+        Mode::Mode32=>{
+            state.cpu.segments.fs = get_teb_addr_config(
+                _config, 
+                &analysis.xi.mode) as i64;
+        },
+        Mode::Mode64=>{
+            state.cpu.segments.gs = get_teb_addr_config(
+                _config, 
+                &analysis.xi.mode) as i64;
+        }
+        _=>{},
+    }
+
+    // Handle DLLs
+    // X64 Parse .pdata and add to queue
+    match (analysis.header.binary_type, analysis.xi.mode)
+    {
+        (BinaryType::PEDLL, Mode::Mode64)=> {
+            for (func_offset, mem_type) in parse_dll_functions64(analysis, mem_manager)
+            {
+                let entry_point = analysis.base + analysis.header.address_of_entry_point as usize;
+                if entry_point == func_offset
+                {
+                    continue;
+                }
+                let mut new_state = state.clone();
+                new_state.offset = func_offset;
+                new_state.current_function_addr=func_offset as u64;
+                new_state.analysis_type = AnalysisType::Code;
+                // Add the EntryPoint as the starting function
+                analysis.functions.push(FuncInfo
+                {
+                    address: func_offset as u64,
+                    mem_address: 0,
+                    xrefs: BTreeSet::new(),
+                    name: format!("sub_{:x}", func_offset),
+                    argc: 0,
+                    mem_type: mem_type.clone(),
+                    returns: BTreeSet::new(),
+                    return_values: BTreeMap::new(),
+                    jumps: BTreeMap::new(),
+                });
+                if mem_type == MemoryType::Image
+                {
+                    analysis_queue.push_back(new_state);
+                }
+            }
+        },
+        _=>{},
+    }
+
 }

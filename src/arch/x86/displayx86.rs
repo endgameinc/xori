@@ -21769,7 +21769,7 @@ pub fn build_rm_memory<T: ArchDetail>(
             {
                 match rm.base_ea{
                     0=>{
-                        if rm.displacement_ea == 0 {
+                        if rm.displacement_ea == EADisplacement::Size0 {
                             disasm_debug!("\tdisplacement_ea is 0");
                             return false; 
                         }

@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["TrustResult","The result of trust evaluation."]],"struct":[["SecTrust","A type representing a trust evaluation for a certificate."]]});

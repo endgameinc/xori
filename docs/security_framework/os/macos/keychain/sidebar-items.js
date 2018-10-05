@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["CreateOptions","A builder type to create new keychains."],["KeychainSettings","Settings associated with a `SecKeychain`."],["SecKeychain","A type representing a keychain."]],"trait":[["SecKeychainExt","Deprecated."]]});

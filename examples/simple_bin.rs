@@ -21,7 +21,7 @@ fn main()
         config_map = read_config(&Path::new("xori.json"));
     } 
 
-	match analyze(&Arch::ArchX86, &mut binary32, &config_map)
+	match analyze(&Arch::ArchX86, &Mode::Mode32, &mut binary32, &config_map)
     {
         Some(analysis)=>{
             if !analysis.disasm.is_empty(){

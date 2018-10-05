@@ -1,0 +1,1 @@
+initSidebarItems({"trait":[["SecCertificateExt","An extension trait adding OSX specific functionality to `SecCertificate`."]]});

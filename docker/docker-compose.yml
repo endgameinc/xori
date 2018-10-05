@@ -1,0 +1,22 @@
+version: '2.1'
+
+services:
+    xori:
+        restart: always
+        container_name: xori
+        build:
+            context: .
+        ports:
+            - "3000:3000"
+            - "5000:5000"
+        logging:
+            driver: json-file
+            options:
+                max-size: "100M"
+                max-file: "1"
+        volumes:
+            - xori-dynamic:/root/xori/gui/dynamic
+
+volumes:
+    xori-dynamic:
+        driver: local

@@ -17,6 +17,7 @@ use arch::x86::analyzex86::*;
 use arch::x86::cpux86::*;
 use analysis::formats::peloader::*;
 use analysis::signature_analysis::SigAnalyzer;
+use analysis::data_analyzer::{scan_for_function_blocks, rename_indirect_calls};
 
 pub const STACK_ADDRESS: u64 = 0x200000;
 pub const MAX_LOOPS: usize = 10;
@@ -25,6 +26,10 @@ pub const MAX_LOOPS: usize = 10;
 pub enum BinaryType{
     BIN, //Default case
     PE,
+    PEEXE,
+    PEDLL,
+    PENET,
+    PESYS,
     ELF,
     MACHO,
 }
@@ -120,6 +125,7 @@ impl Header
             },
             BinaryType::ELF=>return Err(format!("ELF is not supported yet")),
             BinaryType::MACHO=>return Err(format!("MACHO is not supported yet")),
+            _=>return Err(format!("Unsupported format")),
         }
         return Ok(0);
     }
@@ -187,24 +193,21 @@ fn display_disassembly(analysis: &mut Analysisx86){
 // Only x86 for now
 fn disassemble_init(
     _arch: &Arch,
-    _mode: Mode,
     _header: Header,
     _binary: &mut [u8],
     _config: &Config) -> Option<Analysisx86>
 {
-    // Handle Image Building
-    let mut new_binary = MmapMut::map_anon(_header.size_of_image as usize)
-        .expect("failed to map the file");
-
-    // Needed for PE Lifetime
-    let mut _teb: Vec<u8> = Vec::new();
-    let mut _peb: Vec<u8> = Vec::new();
-    let mut _lib_header: Vec<u8> = Vec::new();
-
     debug!("disassemble()");
     match *_arch{
         Arch::ArchX86 =>
         {
+            // Needed for PE Lifetime
+            // Handle Image Building
+            let mut new_binary = MmapMut::map_anon(_header.size_of_image as usize)
+                .expect("failed to map the file");
+            let mut teb: Vec<u8> = Vec::new();
+            let mut peb: Vec<u8> = Vec::new();
+
             let mut analysis_queue: VecDeque<Statex86> = VecDeque::new();
             let mut mem_manager: MemoryManager = MemoryManager{ list: Vec::new() };
             let mut analysis: Analysisx86 = Analysisx86 
@@ -230,7 +233,11 @@ fn disassemble_init(
             println!("MODE: {:?}", analysis.xi.mode);
 
             /* Initialize Signature Analyzer */
-            analysis.sig_analyzer.init(_config, &analysis.xi.arch, &analysis.xi.mode);
+            analysis.sig_analyzer.init(
+                _config, 
+                &analysis.xi.arch, 
+                &analysis.xi.mode, 
+                &analysis.header.binary_type);
 
             // Initalize the CPU state
             let mut state = Statex86{
@@ -258,117 +265,22 @@ fn disassemble_init(
 
             match analysis.header.binary_type
             {
-                BinaryType::PE=>
+                BinaryType::PE |
+                BinaryType::PEEXE | 
+                BinaryType::PEDLL | 
+                BinaryType::PESYS | 
+                BinaryType::PENET =>
                 {           
-                    println!("BUILDING IMAGE MEMORY:");
-
-                    // Initialize memorybounds for the main binary
-                    let mut mem_image = MemoryBounds
-                    {
-                        base_addr: analysis.base,
-                        size: 0,
-                        mem_type: MemoryType::Image,
-                        binary: match build_image(_binary, &analysis.header, &mut new_binary)
-                        {
-                            (true, false)=>new_binary.as_mut(),
-                            (true, true)=>{
-                                // for corrupted images
-                                debug!("Image is corrupted, setting entry_point to image base");
-                                if code_start > (analysis.base + new_binary.len())
-                                {
-                                    state.offset = analysis.base;
-                                } else {
-                                    state.offset = code_start;
-                                }
-                                new_binary.as_mut()
-                            },
-                            (false, false)=>_binary,
-                            (false, true)=>{
-                                // for corrupted images
-                                debug!("Image is corrupted, setting entry_point to image base");
-                                if code_start > (analysis.base + _binary.len())
-                                {
-                                    state.offset = analysis.base;
-                                } else {
-                                    state.offset = code_start;
-                                }
-                                _binary
-                            },
-                        },
-                    };
-                    // Retroactively set the size
-                    mem_image.size = mem_image.binary.len();
-
-                    // Match FLIRTS on everything
-                    // All offsets relative to mem_image.binary
-                    let flirt; 
-                    if _config.x86.flirt_enabled {
-                       flirt = analysis.sig_analyzer.flirt_match(&mem_image.binary);
-                       println!("EXPERIMENTAL FLIRT SIG MATCHES\n{:?}",flirt);
-                    }
-
-                    // Create bounds for Non-Executable sections to ignore
-                    ignore_section_data(&mut analysis);
-
-                    // PE only Build DLL addresses
-                    println!("BUILDING DLL IMPORTS:");
-                    build_dll_import_addresses(
+                    build_pe(
+                        _config,
+                        _binary,
+                        &mut new_binary,
+                        &mut teb,
+                        &mut peb,
+                        &mut state,
                         &mut analysis,
-                        &mut mem_image,
-                        _config);
-
-                    mem_manager.list.push(mem_image);
-
-                    //Build NTDLL & Kernel32 memory spaces
-                    build_dll_memory(&mut analysis, &mut mem_manager);
-
-                    //Build the TIB/PEB
-                    let teb_addr = get_teb_addr_config(
-                                _config, 
-                                &analysis.xi.mode) as usize;
-                    _teb = build_teb(&mut analysis, _config).to_owned();
-
-                    mem_manager.list.push(MemoryBounds
-                    {
-                        base_addr: teb_addr,
-                        size: _teb.len(),
-                        mem_type: MemoryType::Teb,
-                        binary: &mut _teb,
-                    });
-                    
-                    let peb_addr = get_peb_addr_config(
-                                _config, 
-                                &analysis.xi.mode) as usize;
-
-                    _peb = build_peb(&mut analysis, _config).to_owned();
-
-                    // Initialize memorybounds for the Peb
-                    mem_manager.list.push(MemoryBounds
-                    {
-                        base_addr: peb_addr,
-                        size: _peb.len(),
-                        mem_type: MemoryType::Peb,
-                        binary: &mut _peb,
-                    });
-
-                    // Get virtual address of kernel32!BaseThreadInitThunk and assign to eax
-                    state.cpu.regs.eax.value = get_inital_eax(&mut analysis);
-                    
-                    // Get the FS/GS Registers
-                    match analysis.xi.mode
-                    {
-                        Mode::Mode32=>{
-                            state.cpu.segments.fs = get_teb_addr_config(
-                                _config, 
-                                &analysis.xi.mode) as i64;
-                        },
-                        Mode::Mode64=>{
-                            state.cpu.segments.gs = get_teb_addr_config(
-                                _config, 
-                                &analysis.xi.mode) as i64;
-                        }
-                        _=>{},
-                    }
+                        &mut mem_manager,
+                        &mut analysis_queue);
                 },
                 _=>
                 {
@@ -408,6 +320,7 @@ fn disassemble_init(
             });
 
             let mut code_start_state = state.clone();
+            let mut data_start_state = state.clone();
             analysis_queue.push_front(state);
             
             // Each new state will be processed in this queue
@@ -429,8 +342,9 @@ fn disassemble_init(
                 }
             }
 
-            // PASS 2 reanalyze beginning
-            if !code_start_state.emulation_enabled{
+            
+            if !code_start_state.emulation_enabled {
+                // PASS 2 reanalyze beginning of Code
                 code_start_state.offset = code_start;
                 code_start_state.current_function_addr=0;
                 code_start_state.analysis_type = AnalysisType::Data;
@@ -451,7 +365,41 @@ fn disassemble_init(
                         None=>{},
                     }
                 }
+
+                // PASS 3 data
+                data_start_state.offset = data_start;
+                data_start_state.current_function_addr=0;
+                data_start_state.analysis_type = AnalysisType::Data;
+
+                analysis_queue.push_front(data_start_state);
+
+                while !analysis_queue.is_empty()
+                {
+                    let mut new_state = analysis_queue.pop_front();
+                    match new_state{
+                        Some(ref mut nstate)=>
+                        {
+                            recurse_disasmx86(
+                                &mut analysis, 
+                                &mut mem_manager,
+                                nstate, 
+                                &mut analysis_queue);
+                        }
+                        None=>{},
+                    }
+                }
             }
+
+            // Function Block Renaming
+            if _config.x86.flirt_enabled {
+                scan_for_function_blocks(
+                    &mut analysis, 
+                    &mut mem_manager);
+            }
+
+            rename_indirect_calls(
+                &mut analysis);
+
             return Some(analysis);      
         },
         _=>{},
@@ -488,7 +436,8 @@ fn disassemble_init(
 /// }
 /// ```   
 pub fn analyze(
-    arch: &Arch, 
+    arch: &Arch,
+    mode: &Mode, 
     binary: &mut [u8], 
     config: &Config) -> Option<Analysis>
 {
@@ -518,10 +467,10 @@ pub fn analyze(
             }
             debug!("Identified binary data");
             header.size_of_image = binary.len() as u64;
-            
+            header.mode = *mode;
+
             let some_analysis = disassemble_init(
                 arch, 
-                Mode::Mode32, 
                 header, 
                 binary, 
                 config);
@@ -566,7 +515,11 @@ pub fn analyze(
                 None=>{},
             }
         },
-        BinaryType::PE=>
+        BinaryType::PE |
+        BinaryType::PEEXE | 
+        BinaryType::PEDLL | 
+        BinaryType::PESYS | 
+        BinaryType::PENET =>
         {
             debug!("Identified PE");
             // parse
@@ -578,8 +531,7 @@ pub fn analyze(
             // disassemble
             // default arch is x86
             let some_analysis = disassemble_init(
-                arch, 
-                Mode::Mode32, 
+                arch,
                 header, 
                 binary,
                 config);

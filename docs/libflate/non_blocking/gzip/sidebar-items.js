@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Decoder","GZIP decoder which supports non-blocking I/O."]]});

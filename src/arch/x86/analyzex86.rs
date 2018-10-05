@@ -10,7 +10,9 @@ use std::collections::VecDeque;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use num::{Num, NumCast};
-use std::ops::BitOr;
+use num::traits::AsPrimitive;
+//use std::num::Wrapping;
+//use std::ops::BitOr;
 use std::ops::Bound::Included;
 
 const CHUNK_SIZE: usize = 100; // 15 bytes
@@ -89,14 +91,29 @@ impl Analysisx86
         left: i64,
         right: i64)
     {
+        let mut is_local_function = false;
+        for func in self.functions.iter_mut()
+        {
+            if func.address == right as u64 && left == 0
+            {
+                is_local_function = true;
+                func.xrefs.insert(offset);
+            }
+        }
         for func in self.functions.iter_mut()
         {
             if func.address == *address{
+                if (left == 0 && right == 0) || is_local_function
+                {
+                    // add it as a return for non conditional jump
+                    func.returns.insert(offset);
+                }
                 func.jumps.insert(offset, Jump
-                    {
-                        left: left,
-                        right: right,
-                    });
+                {
+                    left: left,
+                    right: right,
+                });
+                
                 return; 
             }
         }
@@ -126,15 +143,14 @@ impl Analysisx86
         for func in self.functions.iter_mut()
         {
             if func.address == *address{
+                func.returns.insert(offset);
                 match func.return_values.get(&value)
                 {
                     Some(rval)=>{
                         debug!("return is 0x{:x}", value);
-                        func.returns.insert(offset);
                         return (true, *rval);
                     }
                     None=>{
-                        func.returns.insert(offset);
                         return (false, 0); 
                     }
                 }
@@ -193,7 +209,10 @@ impl Analysisx86
         // Specific OS based requirements here
         match self.header.binary_type
         {
-            BinaryType::PE=>
+            BinaryType::PE |
+            BinaryType::PEEXE | 
+            BinaryType::PEDLL | 
+            BinaryType::PESYS =>
             {
                 // check if the function is on the IAT
                 match self.header.import_table{
@@ -235,6 +254,7 @@ impl Analysisx86
                 // check if function exists in json pdb files
                 if new_function.name.is_empty()
                 {
+                    new_function.name = format!("sub_{:x}", destination_offset);
                     match self.symbols
                     {
                         Some(ref sym)=>{
@@ -261,6 +281,9 @@ impl Analysisx86
             },
             _=>{},
         }
+
+        // If the jump is a function that already exists
+
         // If the instruction is a jump
         if import_only
         {
@@ -320,7 +343,7 @@ impl Statex86 {
         address: i64,
         value_size: usize) -> i64
     {
-        if address == 0{
+        if address == 0 {
             return 0;
         }
 
@@ -331,65 +354,32 @@ impl Statex86 {
             return 0;
         }
         let index: isize = index_check;
-        if 0 <= index && index < self.stack.len() as isize 
-        {
-            let stack_bytes : &[u8] = &self.stack;
+        if 0 <= index && index < self.stack.len() as isize {
             match value_size
             {
-                1=>{
-                    let mut temp: u8 = 0;
-                    if read_int::<u8>(
-                        &mut temp, 
-                        index as usize, 
-                        0,
-                        self.stack.len(),
-                        stack_bytes)
-                    {
-                        return (temp as i8) as i64;
-                    }
+                1 => {
+                    read_int::<i8>(index as usize, 0, &self.stack)
+                        .unwrap_or(0) as i64
                 },
-                2=>{
-                    let mut temp: u16 = 0;
-                    if read_int::<u16>(
-                        &mut temp, 
-                        index as usize, 
-                        0,
-                        self.stack.len(),
-                        stack_bytes)
-                    {
-                        return (temp as i16) as i64;
-                    }
+                2 => {
+                    read_int::<i16>(index as usize, 0, &self.stack)
+                        .unwrap_or(0) as i64
                 },
-                4=>{
-                    let mut temp: u32 = 0;
-                    if read_int::<u32>(
-                        &mut temp, 
-                        index as usize, 
-                        0,
-                        self.stack.len(),
-                        stack_bytes)
-                    {
-                        return (temp as i32) as i64;
-                    }
+                4 => {
+                    read_int::<i32>(index as usize, 0, &self.stack)
+                        .unwrap_or(0) as i64
                 },
-                8=>{
-                    let mut temp: u64 = 0;
-                    if read_int::<u64>(
-                        &mut temp, 
-                        index as usize, 
-                        0,
-                        self.stack.len(),
-                        stack_bytes)
-                    {
-                        return temp as i64;
-                    }
+                8 => {
+                    read_int::<i64>(index as usize, 0, &self.stack)
+                        .unwrap_or(0) as i64
                 },
-                _=>{}
+                _ => 0
             }
+        } else {
+            0
         }
-
-        return 0
     }
+
     pub fn stack_write(
         &mut self,
         address: u64,
@@ -437,6 +427,7 @@ pub enum MemoryType
     Peb,
     Library,
     ExportDir,
+    Handler,
 }
 
 #[derive(Debug)]
@@ -454,27 +445,34 @@ pub struct MemoryManager<'a>
     pub list: Vec<MemoryBounds<'a>>,
 }
 
-fn read_int<T: Num + BitOr<Output=T> + NumCast + Copy>(
-     _byte: &mut T,
+pub fn read_int<T: Num + NumCast + Copy + 'static>(
      _offset: usize,
      _address: usize,
-     _size: usize,
-     _binary: &[u8])-> bool
+     _binary: &[u8]) -> Option<T>
+    where u64: AsPrimitive<T>
 {
-    let length = ::std::mem::size_of::<T>();
+    if let Some(start) = _offset.checked_sub(_address) {
+        // start does not underflow, good!
 
-    for offset in 0..length {
-        let mut _byte0: u8 = 0;
-        let address_offset = _offset-_address+offset;
-        
-        if address_offset >= _size{
-            return false;
+        let count_to_read = ::std::mem::size_of::<T>();
+
+        if let Some(end) = start.checked_add(count_to_read) {
+            if end <= _binary.len() {
+                // end is in bounds, also good!
+
+                let mut result: u64 = 0;
+
+                for byte_index in 0..count_to_read {
+                    result |= (_binary[start + byte_index] as u64) << (byte_index * 8);
+                }
+
+                return NumCast::from::<u64>(result)
+                    .map(|x: u64| x.as_());
+            }
         }
-        _byte0 = _binary[address_offset];
-        let new_num = (_byte0 as u64) << (offset as u64 * 8);
-        *_byte = *_byte | NumCast::from(new_num).unwrap();
-    } 
-    return true;
+    }
+
+    return None;
 }
 
 fn binary_write(
@@ -504,61 +502,28 @@ fn binary_read(
     address: usize,  
     value_size: usize,
     base_addr: usize,
-    binary: &mut [u8])->i64
+    binary: &mut [u8]) -> i64
 {
-    match value_size 
+    match value_size
     {
-        1=>{
-            let mut temp: u8 = 0;
-            if read_int::<u8>(
-                &mut temp, 
-                address as usize, 
-                base_addr,
-                binary.len(),
-                binary)
-            {
-                return (temp as i8) as i64;
-            }
+        1 => {
+            read_int::<u8>(address, base_addr, binary)
+                .unwrap_or(0) as i8 as i64
         },
-        2=>{
-            let mut temp: u16 = 0;
-            if read_int::<u16>(
-                &mut temp, 
-                address as usize, 
-                base_addr,
-                binary.len(),
-                binary)
-            {
-                return (temp as i16) as i64;
-            }
+        2 => {
+            read_int::<u16>(address, base_addr, binary)
+                .unwrap_or(0) as i16 as i64
         },
-        4=>{
-            let mut temp: u32 = 0;
-            if read_int::<u32>(
-                &mut temp, 
-                address as usize, 
-                base_addr,
-                binary.len(),
-                binary)
-            {
-                return (temp as i32) as i64;
-            }
+        4 => {
+            read_int::<u32>(address, base_addr, binary)
+                .unwrap_or(0) as i32 as i64
         },
-        8=>{
-            let mut temp: u64 = 0;
-            if read_int::<u64>(
-                &mut temp, 
-                address as usize, 
-                base_addr,
-                binary.len(),
-                binary)
-            {
-                return temp as i64;
-            }
+        8 => {
+            read_int::<u64>(address, base_addr, binary)
+                .unwrap_or(0) as i64
         },
-        _=>{}
+        _ => 0
     }
-    return 0;
 }
 
 pub fn transmute_integer_to_vec(
@@ -1378,14 +1343,6 @@ pub fn recurse_disasmx86(
             }
         }
         
-        if check_address_already_analyzed(
-            state.offset as u64,
-            &analysis.address_tracker)
-        { 
-            return true;
-        }
-
-
         match state.analysis_type
         {
             AnalysisType::Data=>{
@@ -1410,6 +1367,14 @@ pub fn recurse_disasmx86(
                 }
             },
             AnalysisType::Code=>{
+
+                if check_address_already_analyzed(
+                    state.offset as u64,
+                    &analysis.address_tracker)
+                { 
+                    return true;
+                }
+
                 match check_instruction_exists(state.offset as u64, analysis)
                 {
                     Some(mut instruction)=>{

@@ -169,8 +169,12 @@ impl Xori
                     instructions = Instruction::new();
                     instructions.address = _address as u64;
                     instructions.offset = offset;
-                    ret = disasmx86(_code, _size, &mut length, offset as u64, &mut instructions, &self.mode);
-                    if ret{
+                    ret = if let Some(x86_mode) = Modex86::from_mode(&self.mode) {
+                        disasmx86(_code, _size, &mut length, offset as u64, &mut instructions, x86_mode)
+                    } else {
+                        false
+                    };
+                    if ret {
                         _next_offset = length;
                         length = 0;
                     } else {
