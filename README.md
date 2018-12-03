@@ -2,7 +2,7 @@
 # Xori - Custom disassembly framework
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
-
+[![Rawsec's CyberSecurity Inventory](https://inventory.rawsec.ml/img/badges/Rawsec-inventoried-FF5050_flat.svg)](https://inventory.rawsec.ml/tools.html#Xori)
 
 Xori is an automation-ready disassembly and static analysis library that consumes shellcode or PE binaries and provides triage analysis data.
 
