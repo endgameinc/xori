@@ -36,7 +36,7 @@ pub enum BinaryType{
 
 pub struct Analysis
 {
-    pub xi: Xori, 
+    pub xi: Xori,
     pub base: usize,
     pub disasm: String,
     pub functions: String,
@@ -85,7 +85,7 @@ pub struct Header
 
 impl Header
 {
-    pub fn new()->Header 
+    pub fn new()->Header
     {
         Header{
             binary_type: BinaryType::BIN,
@@ -130,7 +130,7 @@ impl Header
         return Ok(0);
     }
     fn identify(&mut self, binary: &mut [u8])->BinaryType{
-    
+
         let test_elf = &binary[0..7];
         if test_elf.eq(b"\x7f\x45\x4c\x46\x02\x02\x01")
         {
@@ -144,7 +144,7 @@ impl Header
             return BinaryType::PE;
         }
         let test_macho = &binary[0..4];
-        if test_macho.eq(b"\xFE\xED\xFA\xCE")
+        if test_macho.eq(b"\xCF\xFA\xED\xFE")
         {
             self.binary_type = BinaryType::MACHO;
             return BinaryType::MACHO;
@@ -155,11 +155,11 @@ impl Header
 }
 
 fn hex_array(
-    arr: &[u8; 16], 
-    len: usize) -> String 
+    arr: &[u8; 16],
+    len: usize) -> String
 {
     let mut s = String::new();
-    for i in 0..len 
+    for i in 0..len
     {
         let byte = arr[i];
         write!(&mut s, "{:02X} ", byte).expect("Unable to write");
@@ -177,12 +177,12 @@ fn display_disassembly(analysis: &mut Analysisx86){
             {
                 if !d.contents.is_empty(){
                     detail = format!("{}; {}", detail, d.contents);
-                } 
+                }
             }
-              
+
         }
-        println!("{:16} {:20} {} {} {}", 
-            addr.yellow(), 
+        println!("{:16} {:20} {} {} {}",
+            addr.yellow(),
             hex_array(&item.instr.bytes, item.instr.size).white(),
             item.instr.mnemonic,
             item.instr.op_str,
@@ -210,7 +210,7 @@ fn disassemble_init(
 
             let mut analysis_queue: VecDeque<Statex86> = VecDeque::new();
             let mut mem_manager: MemoryManager = MemoryManager{ list: Vec::new() };
-            let mut analysis: Analysisx86 = Analysisx86 
+            let mut analysis: Analysisx86 = Analysisx86
             {
                 xi: Xori { arch: Arch::ArchX86, mode: _header.mode },
                 base: _header.image_base as usize,
@@ -234,20 +234,20 @@ fn disassemble_init(
 
             /* Initialize Signature Analyzer */
             analysis.sig_analyzer.init(
-                _config, 
-                &analysis.xi.arch, 
-                &analysis.xi.mode, 
+                _config,
+                &analysis.xi.arch,
+                &analysis.xi.mode,
                 &analysis.header.binary_type);
 
             // Initalize the CPU state
             let mut state = Statex86{
                 offset: entry_point,
-                cpu: CPUStatex86::new(), 
+                cpu: CPUStatex86::new(),
                 stack: Vec::new(),
                 current_function_addr: entry_point as u64,
-                emulation_enabled: _config.x86.emulation_enabled, 
+                emulation_enabled: _config.x86.emulation_enabled,
                 loop_state: LoopState{
-                    max_loops: _config.x86.loop_default_case, 
+                    max_loops: _config.x86.loop_default_case,
                     is_loop: false,
                     forward_addr: Vec::new(),
                     loop_tracker: Vec::new()
@@ -255,7 +255,7 @@ fn disassemble_init(
                 analysis_type: AnalysisType::Code,
             };
 
-            // Initalize the segement registers 
+            // Initalize the segement registers
             state.cpu.address_size = analysis.xi.mode.get_size() as u8;
             state.cpu.stack_address = _config.x86.stack_address + analysis.header.stack_size;
             state.cpu.segments.ss = state.cpu.stack_address as i64;
@@ -266,11 +266,11 @@ fn disassemble_init(
             match analysis.header.binary_type
             {
                 BinaryType::PE |
-                BinaryType::PEEXE | 
-                BinaryType::PEDLL | 
-                BinaryType::PESYS | 
+                BinaryType::PEEXE |
+                BinaryType::PEDLL |
+                BinaryType::PESYS |
                 BinaryType::PENET =>
-                {           
+                {
                     build_pe(
                         _config,
                         _binary,
@@ -295,7 +295,7 @@ fn disassemble_init(
                 },
             }
 
-            // Initialize stack memory bounds 
+            // Initialize stack memory bounds
             mem_manager.list.push(
             MemoryBounds
             {
@@ -322,7 +322,7 @@ fn disassemble_init(
             let mut code_start_state = state.clone();
             let mut data_start_state = state.clone();
             analysis_queue.push_front(state);
-            
+
             // Each new state will be processed in this queue
             // State is incremented by state.offset
             // PASS 1
@@ -333,16 +333,16 @@ fn disassemble_init(
                     Some(ref mut nstate)=>
                     {
                         recurse_disasmx86(
-                            &mut analysis, 
+                            &mut analysis,
                             &mut mem_manager,
-                            nstate, 
+                            nstate,
                             &mut analysis_queue);
                     }
                     None=>{},
                 }
             }
 
-            
+
             if !code_start_state.emulation_enabled {
                 // PASS 2 reanalyze beginning of Code
                 code_start_state.offset = code_start;
@@ -357,9 +357,9 @@ fn disassemble_init(
                         Some(ref mut nstate)=>
                         {
                             recurse_disasmx86(
-                                &mut analysis, 
+                                &mut analysis,
                                 &mut mem_manager,
-                                nstate, 
+                                nstate,
                                 &mut analysis_queue);
                         }
                         None=>{},
@@ -380,9 +380,9 @@ fn disassemble_init(
                         Some(ref mut nstate)=>
                         {
                             recurse_disasmx86(
-                                &mut analysis, 
+                                &mut analysis,
                                 &mut mem_manager,
-                                nstate, 
+                                nstate,
                                 &mut analysis_queue);
                         }
                         None=>{},
@@ -393,14 +393,14 @@ fn disassemble_init(
             // Function Block Renaming
             if _config.x86.flirt_enabled {
                 scan_for_function_blocks(
-                    &mut analysis, 
+                    &mut analysis,
                     &mut mem_manager);
             }
 
             rename_indirect_calls(
                 &mut analysis);
 
-            return Some(analysis);      
+            return Some(analysis);
         },
         _=>{},
     }
@@ -410,9 +410,9 @@ fn disassemble_init(
 /// This is the main function that analyzes the binary
 /// based on type.
 /// NOTE: Only x86 Binary and PEs are supported.
-/// 
+///
 /// # Example:
-/// 
+///
 /// ```rust,ignore
 /// let mut binary32= b"\xe9\x1e\x00\x00\x00\xb8\x04\
 /// \x00\x00\x00\xbb\x01\x00\x00\x00\x59\xba\x0f\
@@ -424,7 +424,7 @@ fn disassemble_init(
 /// if Path::new("xori.json").exists()
 /// {
 ///     config_map = read_config(&Path::new("xori.json"));
-/// } 
+/// }
 /// match analyze(&Arch::ArchX86, &mut binary32, &config_map)
 /// {
 ///     Some(analysis)=>{
@@ -434,11 +434,11 @@ fn disassemble_init(
 ///     },
 ///     None=>{},
 /// }
-/// ```   
+/// ```
 pub fn analyze(
     arch: &Arch,
-    mode: &Mode, 
-    binary: &mut [u8], 
+    mode: &Mode,
+    binary: &mut [u8],
     config: &Config) -> Option<Analysis>
 {
     debug!("analyze()");
@@ -470,9 +470,9 @@ pub fn analyze(
             header.mode = *mode;
 
             let some_analysis = disassemble_init(
-                arch, 
-                header, 
-                binary, 
+                arch,
+                header,
+                binary,
                 config);
             // disassemble
             // default arch is x86
@@ -483,7 +483,7 @@ pub fn analyze(
                         true=>serde_json::to_string(&analysis.functions).unwrap_or(String::new()),
                         false=>String::new(),
                     };
-                    
+
                     let result_header = match config.x86.output.imports
                     {
                         true=>serde_json::to_string(&analysis.header).unwrap_or(String::new()),
@@ -503,7 +503,7 @@ pub fn analyze(
 
                     /* Handle output */
                     let result = Analysis {
-                        xi: analysis.xi, 
+                        xi: analysis.xi,
                         base: analysis.base,
                         disasm: result_disasm,
                         functions: result_functions,
@@ -516,14 +516,14 @@ pub fn analyze(
             }
         },
         BinaryType::PE |
-        BinaryType::PEEXE | 
-        BinaryType::PEDLL | 
-        BinaryType::PESYS | 
+        BinaryType::PEEXE |
+        BinaryType::PEDLL |
+        BinaryType::PESYS |
         BinaryType::PENET =>
         {
             debug!("Identified PE");
             // parse
-            if header.address_of_entry_point == 0 
+            if header.address_of_entry_point == 0
             {
                 error!("not a valid PE header");
                 return None;
@@ -532,7 +532,7 @@ pub fn analyze(
             // default arch is x86
             let some_analysis = disassemble_init(
                 arch,
-                header, 
+                header,
                 binary,
                 config);
 
@@ -544,7 +544,7 @@ pub fn analyze(
                         true=>serde_json::to_string(&analysis.functions).unwrap_or(String::new()),
                         false=>String::new(),
                     };
-                    
+
                     let result_header = match config.x86.output.imports
                     {
                         true=>serde_json::to_string(&analysis.header).unwrap_or(String::new()),
@@ -564,17 +564,17 @@ pub fn analyze(
 
                     /* Handle output */
                     let result = Analysis {
-                        xi: analysis.xi, 
+                        xi: analysis.xi,
                         base: analysis.base,
                         disasm: result_disasm,
                         functions: result_functions,
                         header: result_header,
                     };
-                    
+
                     return Some(result);
                 },
                 None=>{},
-            }            
+            }
         },
         BinaryType::ELF=>
         {
