@@ -20,10 +20,10 @@ pub mod log;
 #[cfg(test)]
 pub mod test;
 
-pub mod arch 
+pub mod arch
 {
-    pub mod x86 
-    {   
+    pub mod x86
+    {
         #[macro_use]
         pub mod archx86;
         pub mod registersx86;
@@ -38,7 +38,7 @@ pub mod arch
         pub mod emulatex86;
     }
 }
-pub mod analysis 
+pub mod analysis
 {
     pub mod analyze;
     pub mod data_analyzer;
@@ -48,5 +48,8 @@ pub mod analysis
         #[macro_use]
         pub mod pe;
         pub mod peloader;
+        pub mod macholoader;
+        pub mod macho;
+
     }
-} 
+}

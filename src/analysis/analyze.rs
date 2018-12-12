@@ -16,6 +16,7 @@ use arch::x86::emulatex86::*;
 use arch::x86::analyzex86::*;
 use arch::x86::cpux86::*;
 use analysis::formats::peloader::*;
+use analysis::formats::macholoader::*;
 use analysis::signature_analysis::SigAnalyzer;
 use analysis::data_analyzer::{scan_for_function_blocks, rename_indirect_calls};
 
@@ -124,7 +125,16 @@ impl Header
                 }
             },
             BinaryType::ELF=>return Err(format!("ELF is not supported yet")),
-            BinaryType::MACHO=>return Err(format!("MACHO is not supported yet")),
+            BinaryType::MACHO=>
+            {
+                debug!("parsing MACHO header");
+                match get_macho_header(self,data,config)
+                {
+                    Ok(_)=>{
+                    },
+                    Err(_err)=>return Err(_err),
+                }
+            },
             _=>return Err(format!("Unsupported format")),
         }
         return Ok(0);

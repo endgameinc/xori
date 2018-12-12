@@ -17,7 +17,7 @@ use std::collections::BTreeSet;
 
 pub const TEB_ADDRESS_64: u64 = 0x7FFFFFDA000;
 pub const TEB_ADDRESS: u64 = 0x7FFDA000;
-pub const PEB_ADDRESS_64: u64 = 0x7FFFFFDF000;  
+pub const PEB_ADDRESS_64: u64 = 0x7FFFFFDF000;
 pub const PEB_ADDRESS: u64 = 0x7FFDF000;
 pub const DLL_ADDRESS_64: u64 = 0x7FE64D50000;
 pub const DLL_ADDRESS: u64 = 0x64D50000;
@@ -64,7 +64,7 @@ struct ThreadInformationBlock32
     exception_code:           u32,  //0x1A4
     activation_context_stack: [u8;  20],    //0x1A8
     spare_bytes:              [u8;  24],    //0x1BC
-    
+
     /*
         // Ignoring
         gdi_teb_batch: [u8; 1248], //0x1D4
@@ -88,7 +88,7 @@ struct ThreadInformationBlock32
         reserved4: u32, //0xF1C
         thread_error_mode: u32, //0xF28
     */
-    
+
 }
 
 #[derive(Serialize, Deserialize)]
@@ -123,11 +123,11 @@ struct ThreadInformationBlock64
     exception_code:           i64,  //0x2c0
     activation_context_stack: u64,  //0x2c8
     spare_bytes:              [u8;  24],    //0x2d0
-    
+
     /*
         // Ignoring
         tx_fs_context: u32, //0x2e8
-        gdi_teb_batch: [u8; 1248], //0x2f0 
+        gdi_teb_batch: [u8; 1248], //0x2f0
         real_process_id: u64, //0x7d8
         real_thread_id: u64, //0x7e0
         gdi_catched_handle: u64, //0x7e8
@@ -322,7 +322,7 @@ struct ProcessEnvironmentBlock64
 struct PebLoaderData32
 {
     // Size of structure, used by ntdll.dll as structure version ID
-    length: u32, //0x00 
+    length: u32, //0x00
     // If set, loader data section for current process is initialized
     initialized: [u8; 4], //0x04
     ss_handle: u32, //0x08
@@ -351,14 +351,14 @@ struct PebLoaderData64
 }
 
 #[derive(Debug,Serialize, Deserialize)]
-struct WinUnicodeSting32 
+struct WinUnicodeSting32
 {
   length: u16,
   maximum_length: u16,
   buffer: u32,
 }
 #[derive(Debug,Serialize, Deserialize)]
-struct WinUnicodeSting64 
+struct WinUnicodeSting64
 {
   length: u32,
   maximum_length: u32,
@@ -433,7 +433,7 @@ impl Section {
             return true;
         }
         return false;
-    } 
+    }
     pub fn is_read(&self)->bool
     {
         if (self.characteristics & SectionMask::MemRead as u32) == SectionMask::MemRead as u32
@@ -465,7 +465,7 @@ impl Section {
             return true;
         }
         return false;
-    }      
+    }
 }
 
 fn load_symbol(
@@ -479,7 +479,7 @@ fn load_symbol(
     }
 
     let file = ::std::fs::File::open(path)
-        .expect("failed to open the file"); 
+        .expect("failed to open the file");
     let mut _symbols: Vec<Symbol> = Vec::new();
     match serde_json::from_reader(file)
     {
@@ -602,7 +602,7 @@ pub fn get_inital_eax(analysis: &mut Analysisx86) -> i64
                 if dll.name.ends_with("kernel32.dll")
                 {
                     for export in dll.exports.iter(){
-                        if export.ordinal == 1 
+                        if export.ordinal == 1
                         {
                             let vaddr = dll.virtual_address + export.rva;
                             debug!("kernel32.dll!{} rva=0x{:x}", export.name, vaddr);
@@ -650,7 +650,7 @@ pub fn build_dll_memory(
 }
 
 pub fn get_dll_binary(
-    bounds_address: usize, 
+    bounds_address: usize,
     analysis: &mut Analysisx86) -> Option<&mut [u8]>
 {
     match analysis.symbols{
@@ -705,23 +705,23 @@ pub fn build_dll_import_addresses<'a>(
                     }
                     _=>{},
                 }
-                
+
                 import.virtual_address = vaddr;
                 for func in import.import_address_list.iter_mut()
                 {
                     let (rva, func_name) = get_export_rva(
                         &import.name,
-                        &mut import.is_symbols, 
-                        &func, 
+                        &mut import.is_symbols,
+                        &func,
                         vaddr,
                         &mut function_symbols);
-                    if rva != 0 
+                    if rva != 0
                     {
                         func.func_name = func_name;
                         func.virtual_address = Some(import.virtual_address + rva);
                         // Insert Address Into image
                         fill_in_address.push(
-                            (func.ft_address as usize, 
+                            (func.ft_address as usize,
                             (import.virtual_address + rva)));
                     }
                 }
@@ -731,7 +731,7 @@ pub fn build_dll_import_addresses<'a>(
                     size: VIRTUAL_ADDRESS_OFFSET as usize,
                     mem_type: MemoryType::Import,
                     binary: &mut [0u8; 0], // empty
-                });            
+                });
                 vaddr += VIRTUAL_ADDRESS_OFFSET;
             }
         }
@@ -742,20 +742,20 @@ pub fn build_dll_import_addresses<'a>(
     {
         // add address to binary
         write_address(
-            offset, 
-            vaddr, 
+            offset,
+            vaddr,
             analysis,
             mem_image.binary);
     }
 }
 
 fn write_address(
-    address: usize, 
-    value: u64, 
+    address: usize,
+    value: u64,
     analysis: &mut Analysisx86,
     binary: &mut [u8])
 {
-    
+
     if address >= binary.len()
     {
         return;
@@ -792,7 +792,7 @@ pub fn build_image<'a>(
     ) -> (bool, bool)
 {
     let mut is_corrupted = false;
-    if _header.size_of_image == 0 
+    if _header.size_of_image == 0
     {
         return (false, is_corrupted);
     }
@@ -837,7 +837,7 @@ pub fn build_image<'a>(
                     let new_raw_size = section_end - section_begin;
                     raw_end = raw_begin + new_raw_size;
                 }
-                
+
                 let mut permissions = String::new();
                 if section.is_read()
                 {
@@ -865,14 +865,14 @@ pub fn build_image<'a>(
                 {
                     section_type.push('U');
                 }
-                println!("\tADDING SECTION: {:10} | start: {:8x}, end: {:8x} | {:4} | {:4}", 
+                println!("\tADDING SECTION: {:10} | start: {:8x}, end: {:8x} | {:4} | {:4}",
                     section.name,
                     section_begin, section_end,
                     permissions,
                     section_type
                 );
                 _new_binary[section_begin..section_end].copy_from_slice(&_binary[raw_begin..raw_end]);
-                
+
             }
             return (true, is_corrupted);
         },
@@ -883,7 +883,7 @@ pub fn build_image<'a>(
 pub fn ignore_section_data(
     analysis: &mut Analysisx86)
 {
-    if analysis.header.size_of_image == 0 
+    if analysis.header.size_of_image == 0
     {
         return;
     }
@@ -910,7 +910,7 @@ pub fn get_section_name(
     offset: u64,
     analysis: &mut Analysisx86) -> String
 {
-    if analysis.header.size_of_image == 0 
+    if analysis.header.size_of_image == 0
     {
         return String::new();
     }
@@ -944,10 +944,10 @@ pub fn build_teb(
     {
         Mode::Mode32=>{
             let teb_addr: u32 = get_teb_addr_config(
-                config, 
+                config,
                 &Mode::Mode32) as u32;
             let peb_addr: u32 = get_peb_addr_config(
-                config, 
+                config,
                 &Mode::Mode32) as u32;
             let teb_struct = ThreadInformationBlock32
             {
@@ -982,10 +982,10 @@ pub fn build_teb(
         },
         Mode::Mode64=>{
             let teb_addr: u64 = get_teb_addr_config(
-                config, 
+                config,
                 &Mode::Mode64);
             let peb_addr: u64 = get_peb_addr_config(
-                config, 
+                config,
                 &Mode::Mode64);
             let teb_struct = ThreadInformationBlock64
             {
@@ -1001,7 +1001,7 @@ pub fn build_teb(
                 process_id:               1234,  //0x40
                 thread_id:                4567,  //0x48
                 active_rpc_handle:        0,  //0x50
-                tls_addr:                 0,  //0x58 
+                tls_addr:                 0,  //0x58
                 peb_addr:                 peb_addr,  //0x60
                 last_error:               0,  //0x68
                 critical_section_count:   0,  //0x6C
@@ -1036,7 +1036,7 @@ pub fn build_peb(
     {
         Mode::Mode32=>{
             let peb_addr: u32 = get_peb_addr_config(
-                config, 
+                config,
                 &Mode::Mode32) as u32;
             let mut peb_struct = ProcessEnvironmentBlock32
             {
@@ -1118,8 +1118,8 @@ pub fn build_peb(
                 tracing_flags:                          0,  //0x0240
             };
             peb_struct.peb_ldr_data = peb_addr + ::std::mem::size_of::<ProcessEnvironmentBlock32>() as u32;
-            debug!("peb_ldr_data 0x{:x} 0x{:x}", 
-                peb_struct.peb_ldr_data, 
+            debug!("peb_ldr_data 0x{:x} 0x{:x}",
+                peb_struct.peb_ldr_data,
                 ::std::mem::size_of::<ProcessEnvironmentBlock32>());
             let mut peb_binary: Vec<u8> = serialize(&peb_struct).unwrap();
             let mut peb_ldr_data = build_peb_ldr_data(analysis, peb_struct.peb_ldr_data as u64);
@@ -1128,90 +1128,90 @@ pub fn build_peb(
         },
         Mode::Mode64=>{
             let peb_addr: u64 = get_peb_addr_config(
-                config, 
+                config,
                 &Mode::Mode64);
 
             let mut peb_struct = ProcessEnvironmentBlock64
             {
-                inherited_addr_space:                   false, 
-                read_image_fileexec_options:            false, 
-                being_debugged:                         false, 
-                bit_field:                              [0; 5],  
-                mutant:                                 0,  
-                image_base_address:  analysis.base as u64,  
-                peb_ldr_data:                           0,  
-                process_parameters:                     0,  
-                sub_system_data:                        0,  
-                process_heap:                           0,  
-                fast_peb_lock:                          0,  
-                atl_thunk_s_list_ptr:                   0,  
-                ifeo_key:                               0,  
-                cross_process_flags:                    0,  
-                kernel_callback_table:                  0,  
-                system_reserved:                        0,  
-                atl_thunk_slist_ptr32:                  0,  
-                api_set_map:                            0,  
-                tls_expansion_counter:                  0,  
-                tls_bitmap:                             0,  
-                tls_bitmap_bits:                        [0; 2],      
-                read_only_shared_memory_base:           0,  
-                hotpatch_information:                   0,  
-                read_only_static_server_data:           0,  
-                ansi_code_page_data:                    0,  
-                oem_code_page_data:                     0,  
-                unicode_case_table_data:                0,  
-                number_of_processors:                   0,  
-                nt_global_flag:                         0,  
-                critical_section_timeout:               0,  
-                heap_segment_reserve:                   0,  
-                heap_segment_commit:                    0,  
-                heap_de_commit_total_free_threshold:    0,  
-                heap_de_commit_free_block_threshold:    0,  
-                number_of_heaps:                        0,  
-                maximum_number_of_heaps:                0,  
-                process_heaps:                          0,  
-                gdi_shared_handle_table:                0,  
-                process_starter_helper:                 0,  
-                gdi_d_c_attribute_list:                 0,  
-                loader_lock:                            0,  
-                os_major_version:                       0,  
-                os_minor_version:                       0,  
-                os_build_number:                        0,  
-                os_csd_version:                         0,  
-                os_platform_id:                         0,  
-                image_subsystem:                        0,  
-                image_subsystem_major_version:          0,  
-                image_subsystem_minor_version:          0,  
-                active_process_affinity_mask:           0,  
-                gdi_handle_buffer:                      [0; 30],     
-                post_process_init_routine:              0,  
-                tls_expansion_bitmap:                   0,  
-                tls_expansion_bitmap_bits:              [0; 32],   
-                session_id:                             1234,  
-                app_compat_flags:                       0,  
-                app_compat_flags_user:                  0,  
-                pshim_data:                             0,  
-                app_compat_info:                        0,  
-                csd_version:                            [0; 16],      
-                activation_context_data:                0,  
-                process_assembly_storage_map:           0,  
-                system_default_activation_context_data: 0,  
-                system_assembly_storage_map:            0,  
-                minimum_stack_commit:                   0,  
-                fls_callback:                           0,  
-                fls_list_head:                          0,  
-                fls_bitmap:                             0,  
-                fls_bitmap_bits:                        [0; 3],      
-                fls_high_index:                         0,  
-                wer_registration_data:                  0,  
-                wer_ship_assert_ptr:                    0,  
-                pcontext_data:                          0,  
-                pimage_header_hash:                     0,  
-                tracing_flags:                          0,  
+                inherited_addr_space:                   false,
+                read_image_fileexec_options:            false,
+                being_debugged:                         false,
+                bit_field:                              [0; 5],
+                mutant:                                 0,
+                image_base_address:  analysis.base as u64,
+                peb_ldr_data:                           0,
+                process_parameters:                     0,
+                sub_system_data:                        0,
+                process_heap:                           0,
+                fast_peb_lock:                          0,
+                atl_thunk_s_list_ptr:                   0,
+                ifeo_key:                               0,
+                cross_process_flags:                    0,
+                kernel_callback_table:                  0,
+                system_reserved:                        0,
+                atl_thunk_slist_ptr32:                  0,
+                api_set_map:                            0,
+                tls_expansion_counter:                  0,
+                tls_bitmap:                             0,
+                tls_bitmap_bits:                        [0; 2],
+                read_only_shared_memory_base:           0,
+                hotpatch_information:                   0,
+                read_only_static_server_data:           0,
+                ansi_code_page_data:                    0,
+                oem_code_page_data:                     0,
+                unicode_case_table_data:                0,
+                number_of_processors:                   0,
+                nt_global_flag:                         0,
+                critical_section_timeout:               0,
+                heap_segment_reserve:                   0,
+                heap_segment_commit:                    0,
+                heap_de_commit_total_free_threshold:    0,
+                heap_de_commit_free_block_threshold:    0,
+                number_of_heaps:                        0,
+                maximum_number_of_heaps:                0,
+                process_heaps:                          0,
+                gdi_shared_handle_table:                0,
+                process_starter_helper:                 0,
+                gdi_d_c_attribute_list:                 0,
+                loader_lock:                            0,
+                os_major_version:                       0,
+                os_minor_version:                       0,
+                os_build_number:                        0,
+                os_csd_version:                         0,
+                os_platform_id:                         0,
+                image_subsystem:                        0,
+                image_subsystem_major_version:          0,
+                image_subsystem_minor_version:          0,
+                active_process_affinity_mask:           0,
+                gdi_handle_buffer:                      [0; 30],
+                post_process_init_routine:              0,
+                tls_expansion_bitmap:                   0,
+                tls_expansion_bitmap_bits:              [0; 32],
+                session_id:                             1234,
+                app_compat_flags:                       0,
+                app_compat_flags_user:                  0,
+                pshim_data:                             0,
+                app_compat_info:                        0,
+                csd_version:                            [0; 16],
+                activation_context_data:                0,
+                process_assembly_storage_map:           0,
+                system_default_activation_context_data: 0,
+                system_assembly_storage_map:            0,
+                minimum_stack_commit:                   0,
+                fls_callback:                           0,
+                fls_list_head:                          0,
+                fls_bitmap:                             0,
+                fls_bitmap_bits:                        [0; 3],
+                fls_high_index:                         0,
+                wer_registration_data:                  0,
+                wer_ship_assert_ptr:                    0,
+                pcontext_data:                          0,
+                pimage_header_hash:                     0,
+                tracing_flags:                          0,
             };
             peb_struct.peb_ldr_data = peb_addr + ::std::mem::size_of::<ProcessEnvironmentBlock64>() as u64;
-            debug!("peb_ldr_data 0x{:x} 0x{:x}", 
-                peb_struct.peb_ldr_data, 
+            debug!("peb_ldr_data 0x{:x} 0x{:x}",
+                peb_struct.peb_ldr_data,
                 ::std::mem::size_of::<ProcessEnvironmentBlock64>());
             let mut peb_binary: Vec<u8> = serialize(&peb_struct).unwrap();
             let mut peb_ldr_data = build_peb_ldr_data(analysis, peb_struct.peb_ldr_data);
@@ -1277,7 +1277,7 @@ fn get_load_order(analysis: &mut Analysisx86) -> Vec<(u64, String, String)>
                         dll.virtual_address = last_virtual_address;
                         last_virtual_address += VIRTUAL_ADDRESS_OFFSET;
                     }
-                    load_list.push((dll.virtual_address, dll.name.clone(), 
+                    load_list.push((dll.virtual_address, dll.name.clone(),
                         String::from(name)));
                     break;
                 }
@@ -1312,10 +1312,10 @@ fn get_load_order(analysis: &mut Analysisx86) -> Vec<(u64, String, String)>
             {
                 if dll.name != "kernel32.dll" && dll.name != "ntdll.dll"
                 {
-                    load_list.push((dll.virtual_address, 
+                    load_list.push((dll.virtual_address,
                         format!("{}{}", "C:\\Windows\\System32\\", dll.name),
                         dll.name.clone()));
-                }               
+                }
             }
         },
         None=>{},
@@ -1347,7 +1347,7 @@ fn get_load_order(analysis: &mut Analysisx86) -> Vec<(u64, String, String)>
                         dll.virtual_address = last_virtual_address;
                         last_virtual_address += VIRTUAL_ADDRESS_OFFSET;
                     }
-                    load_list.push((dll.virtual_address, 
+                    load_list.push((dll.virtual_address,
                     dll.name.clone(),
                     String::from(name)));
                 }
@@ -1384,14 +1384,14 @@ fn build_peb_ldr_data(
                 shutdown_in_progress: 0, //0x28
                 shutdown_thread_id: 0, //0x2C
             };
-            
+
             // build the linked list
             let mut _module_count = 1;
 
             //add self
             _blink = _start_of_list; // pointer to flink
             let module_base = analysis.base as u64;
-            
+
             let mut self_module = build_peb_ldr_table_entry(
                 &Mode::Mode32,
                 _flink,
@@ -1416,7 +1416,7 @@ fn build_peb_ldr_data(
 
             for (index, &(ref module_base, ref path, ref basename)) in load_order.iter().enumerate()
             {
-                
+
                 let mut is_end = false;
                 if index+1 == symbol_count
                 {
@@ -1441,7 +1441,7 @@ fn build_peb_ldr_data(
             peb_ldr_data.in_load_order_module_list[0] = _end_of_list as u32;
             peb_ldr_data.in_memory_order_module_list[0] = (_end_of_list as u32) + 8;
             peb_ldr_data.in_initialization_order_module_list[0] = (_end_of_list as u32) + 16;
-            
+
             let mut peb_ldr_binary: Vec<u8> = serialize(&peb_ldr_data).unwrap();
             peb_ldr_binary.append(&mut self_module);
             return peb_ldr_binary;
@@ -1463,14 +1463,14 @@ fn build_peb_ldr_data(
                 shutdown_in_progress: 0, //0x48
                 shutdown_thread_id: 0, //0x50
             };
-            
+
             // build the linked list
             let mut _module_count = 1;
 
             //add self
             _blink = _start_of_list; // pointer to flink
             let module_base = analysis.base as u64;
-            
+
             let mut self_module = build_peb_ldr_table_entry(
                 &Mode::Mode64,
                 _flink,
@@ -1495,7 +1495,7 @@ fn build_peb_ldr_data(
 
             for (index, &(ref module_base, ref path, ref basename)) in load_order.iter().enumerate()
             {
-                
+
                 let mut is_end = false;
                 if index+1 == symbol_count
                 {
@@ -1520,11 +1520,11 @@ fn build_peb_ldr_data(
             peb_ldr_data.in_load_order_module_list[0] = _end_of_list as u64;
             peb_ldr_data.in_memory_order_module_list[0] = (_end_of_list as u64) + 16;
             peb_ldr_data.in_initialization_order_module_list[0] = (_end_of_list as u64) + 32;
-            
+
             let mut peb_ldr_binary: Vec<u8> = serialize(&peb_ldr_data).unwrap();
             peb_ldr_binary.append(&mut self_module);
             return peb_ldr_binary;
-            
+
         },
         _=>{},
     }
@@ -1653,7 +1653,7 @@ fn get_section_table(
 }
 
 #[derive(Debug,Clone,Serialize)]
-pub struct ImportAddressValue 
+pub struct ImportAddressValue
 {
     pub ord: u64,
     pub func_name: String,
@@ -1674,14 +1674,14 @@ fn get_imports(
         return Err(format!("image data directory is null"));
     }
     let section_table: SectionTable = match section_table(
-        cursor, 
+        cursor,
         *num_sections)
     {
         Ok((_i, section_table))=>section_table,
         Err(err)=>return Err(format!("{:?}", err)),
     };
     let idd_index = rva_to_file_offset(
-        header.image_data_directory as usize, 
+        header.image_data_directory as usize,
         &section_table);
     if idd_index > input.len()
     {
@@ -1709,7 +1709,7 @@ fn get_imports(
             is_symbols: false,
         };
 
-        let (import_addresses, addr_mask, voffset) = match header.mode 
+        let (import_addresses, addr_mask, voffset) = match header.mode
         {
             Mode::Mode32=>{
                 match import_address_table32(&input[rva_to_file_offset(import_descriptor.first_thunk as usize, &section_table,)..],)
@@ -1735,22 +1735,22 @@ fn get_imports(
             _=>return Err(format!("PE Header Unsupported for {:?}", header.mode)),
         };
 
-        for (off, addr) in import_addresses.iter().enumerate() 
+        for (off, addr) in import_addresses.iter().enumerate()
         {
             let mut import_function_name: String = String::new();
             let import_ordinal: u64 = off as u64;
             let mut new_ordinal: u64 = off as u64;
             if *addr & addr_mask == 0x0 {
                 let name_offset = rva_to_file_offset(*addr as usize, &section_table,);
-                if name_offset < input.len(){ 
-                    match image_import_by_name(&input[name_offset..],) 
+                if name_offset < input.len(){
+                    match image_import_by_name(&input[name_offset..],)
                     {
                         Ok((_i, import_function)) => {
                             import_function_name = import_function.name
                         }
                         Err(err)=> return Err(format!("{:?}", err)),
                     }
-                } 
+                }
             } else {
                 new_ordinal = (addr ^ addr_mask) as u64;
             }
@@ -1787,7 +1787,7 @@ pub fn get_pe_header(
         return Err(String::from("Error incomplete DOS Header or might be MS-DOS"));
     }
     let (cursor, pe_header) = match pe_header(
-        &binary[pe_offset..]) 
+        &binary[pe_offset..])
     {
         Ok((cursor, pe_header))=> {
             header.binary_type = match pe_header.coff_header.characteristics & (ImageCharacteristics::ImageFileDll as u16)
@@ -1797,7 +1797,7 @@ pub fn get_pe_header(
             match pe_header.image_optional_header {
                 ImageOptionalHeaderKind::Pe32(ioh) =>
                 {
-                    header.image_base = match config.x86.start_address{ 0=>ioh.image_base.into(), _=>config.x86.start_address }; 
+                    header.image_base = match config.x86.start_address{ 0=>ioh.image_base.into(), _=>config.x86.start_address };
                     header.base_of_code = ioh.base_of_code.into();
                     header.size_of_code = ioh.size_of_code.into();
                     header.base_of_data = ioh.base_of_data.into();
@@ -1810,14 +1810,14 @@ pub fn get_pe_header(
                     header.import_table = None;
                     header.size_of_image = ioh.size_of_image.into();
                     header.section_table = None;
-                    
+
                 },
                 ImageOptionalHeaderKind::Pe32Plus(ioh) =>
                 {
                     header.image_base = match config.x86.start_address{ 0=>ioh.image_base.into(), _=>config.x86.start_address };
-                    header.base_of_code = ioh.base_of_code.into(); 
+                    header.base_of_code = ioh.base_of_code.into();
                     header.size_of_code = ioh.size_of_code.into();
-                    header.base_of_data = 0; 
+                    header.base_of_data = 0;
                     header.address_of_entry_point = match config.x86.entry_point{ 0=>ioh.address_of_entry_point.into(), _=>config.x86.entry_point };
                     header.stack_size = ioh.size_of_stack_reserve.into();
                     header.section_alignment = ioh.section_alignment.into();
@@ -1833,11 +1833,11 @@ pub fn get_pe_header(
         },
         Err(_)=>return Err(String::from("Error incomplete PE Header")),
     };
-    
+
     /* Fix up file_alignment
-    This appears to be the total size of the portions of the image that the 
-    loader has to worry about. It is the size of the region starting at the 
-    image base up to the end of the last section. The end of the last 
+    This appears to be the total size of the portions of the image that the
+    loader has to worry about. It is the size of the region starting at the
+    image base up to the end of the last section. The end of the last
     section is rounded up to the nearest multiple of the section alignment.
     */
     if header.section_alignment > header.file_alignment && header.section_alignment > 0 {
@@ -1846,7 +1846,7 @@ pub fn get_pe_header(
         {
             header.size_of_image = (header.size_of_image - remainder) + header.section_alignment;
         }
-    } else if header.file_alignment > 0 
+    } else if header.file_alignment > 0
     {
         let remainder = header.size_of_image % header.file_alignment;
         if remainder < header.file_alignment
@@ -1858,8 +1858,8 @@ pub fn get_pe_header(
     // Get imports
     header.import_table = match get_imports(
         &header,
-        binary, 
-        cursor, 
+        binary,
+        cursor,
         &pe_header.coff_header.num_sections)
     {
         Ok(import_table)=>Some(import_table),
@@ -1867,7 +1867,7 @@ pub fn get_pe_header(
     };
     // Get section table
     header.section_table = match get_section_table(
-        cursor, 
+        cursor,
         &pe_header.coff_header.num_sections)
     {
         Ok(sections)=>Some(sections),
@@ -1876,7 +1876,7 @@ pub fn get_pe_header(
     return Ok(0);
 }
 
-fn parse_dll_functions64( 
+fn parse_dll_functions64(
     analysis: &mut Analysisx86,
     mem_manager: &mut MemoryManager) -> Vec<(usize, MemoryType)>
 {
@@ -1899,7 +1899,7 @@ fn parse_dll_functions64(
 
                     for func in runtime_functions
                     {
- 
+
                         let unwind_offset: usize = func.unwind_info as usize;
                         match unwind_info(&mem_manager.get_image_by_type(MemoryType::Image)[unwind_offset..])
                         {
@@ -1910,7 +1910,7 @@ fn parse_dll_functions64(
                                 {
                                     result.push((offset, MemoryType::Image));
                                 }
-                                else if flags < 4 && 0 < flags 
+                                else if flags < 4 && 0 < flags
                                 {
                                    result.push((offset, MemoryType::Handler));
                                 }
@@ -1918,7 +1918,7 @@ fn parse_dll_functions64(
                             Err(_)=>{},
                         }
                     }
-                    
+
                 }
             }
         },
@@ -1995,7 +1995,7 @@ pub fn build_pe<'a>(
 
     //Build the TIB/PEB
     let teb_addr = get_teb_addr_config(
-                _config, 
+                _config,
                 &analysis.xi.mode) as usize;
     *_teb = build_teb(analysis, _config).to_owned();
 
@@ -2006,9 +2006,9 @@ pub fn build_pe<'a>(
         mem_type: MemoryType::Teb,
         binary: _teb,
     });
-    
+
     let peb_addr = get_peb_addr_config(
-                _config, 
+                _config,
                 &analysis.xi.mode) as usize;
 
     *_peb = build_peb(analysis, _config).to_owned();
@@ -2024,18 +2024,18 @@ pub fn build_pe<'a>(
 
     // Get virtual address of kernel32!BaseThreadInitThunk and assign to eax
     state.cpu.regs.eax.value = get_inital_eax(analysis);
-    
+
     // Get the FS/GS Registers
     match analysis.xi.mode
     {
         Mode::Mode32=>{
             state.cpu.segments.fs = get_teb_addr_config(
-                _config, 
+                _config,
                 &analysis.xi.mode) as i64;
         },
         Mode::Mode64=>{
             state.cpu.segments.gs = get_teb_addr_config(
-                _config, 
+                _config,
                 &analysis.xi.mode) as i64;
         }
         _=>{},

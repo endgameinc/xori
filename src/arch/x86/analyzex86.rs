@@ -71,7 +71,7 @@ pub enum AnalysisType
 
 pub struct Analysisx86
 {
-    pub xi: Xori, 
+    pub xi: Xori,
     pub header: Header,
     pub base: usize,
     pub address_tracker: BTreeMap<u64, usize>,
@@ -113,8 +113,8 @@ impl Analysisx86
                     left: left,
                     right: right,
                 });
-                
-                return; 
+
+                return;
             }
         }
         return;
@@ -129,7 +129,7 @@ impl Analysisx86
         {
             if func.address == *address{
                 func.returns.insert(offset);
-                return; 
+                return;
             }
         }
         return;
@@ -151,7 +151,7 @@ impl Analysisx86
                         return (true, *rval);
                     }
                     None=>{
-                        return (false, 0); 
+                        return (false, 0);
                     }
                 }
             }
@@ -165,8 +165,8 @@ impl Analysisx86
         calling_function: u64,
         offset: u64,
         return_offset: u64,
-        memory_address: u64, 
-        destination_offset: u64, 
+        memory_address: u64,
+        destination_offset: u64,
         memory_type: MemoryType,
         import_only: bool) -> Option<String>
     {
@@ -177,9 +177,9 @@ impl Analysisx86
         // check if the call exists already
         match self.check_func_exists(
             calling_function,
-            offset, 
+            offset,
             return_offset,
-            destination_offset) 
+            destination_offset)
         {
             Some(position)=>return Some(self.functions[position].name.clone()),
             None=>{},
@@ -210,8 +210,8 @@ impl Analysisx86
         match self.header.binary_type
         {
             BinaryType::PE |
-            BinaryType::PEEXE | 
-            BinaryType::PEDLL | 
+            BinaryType::PEEXE |
+            BinaryType::PEDLL |
             BinaryType::PESYS =>
             {
                 // check if the function is on the IAT
@@ -226,18 +226,18 @@ impl Analysisx86
                                     {
                                         if new_function.address == *addr
                                         {
-                                            new_function.name = format!("{}!{}", 
+                                            new_function.name = format!("{}!{}",
                                                 import.name, function.func_name);
                                             new_function.mem_type = MemoryType::Import;
                                             new_function.mem_address = function.ft_address;
                                             break;
-                                        } 
+                                        }
                                     }
                                     None=>{
-                                        // Fall through 
-                                        if memory_address == (function.ft_address + self.base as u64) 
+                                        // Fall through
+                                        if memory_address == (function.ft_address + self.base as u64)
                                         {
-                                            new_function.name = format!("{}!{}", 
+                                            new_function.name = format!("{}!{}",
                                                 import.name, function.func_name);
                                             new_function.mem_type = MemoryType::Import;
                                             new_function.mem_address = function.ft_address;
@@ -245,7 +245,7 @@ impl Analysisx86
                                         }
                                     },
                                 }
-                                
+
                             }
                         }
                     }
@@ -266,12 +266,12 @@ impl Analysisx86
                                     let vaddr = base_addr + export.rva;
                                     if new_function.address == vaddr
                                     {
-                                        new_function.name = format!("{}!{}", 
+                                        new_function.name = format!("{}!{}",
                                             dll.name, export.name);
                                         new_function.mem_type = MemoryType::Peb;
                                         new_function.mem_address = vaddr;
                                         break;
-                                    } 
+                                    }
                                 }
                             }
                         },
@@ -329,7 +329,7 @@ impl Analysisx86
 pub struct Statex86
 {
     pub offset: usize,
-    pub cpu: CPUStatex86, 
+    pub cpu: CPUStatex86,
     pub stack: Vec<u8>,
     pub current_function_addr: u64,
     pub emulation_enabled: bool,
@@ -411,7 +411,7 @@ impl Statex86 {
             self.stack[i as usize] = byte;
             temp = temp >> 8;
             i+=1;
-        }    
+        }
     }
 }
 
@@ -476,8 +476,8 @@ pub fn read_int<T: Num + NumCast + Copy + 'static>(
 }
 
 fn binary_write(
-    address: usize, 
-    value: u64, 
+    address: usize,
+    value: u64,
     value_size: usize,
     base_addr: usize,
     binary: &mut [u8])
@@ -499,7 +499,7 @@ fn binary_write(
 }
 
 fn binary_read(
-    address: usize,  
+    address: usize,
     value_size: usize,
     base_addr: usize,
     binary: &mut [u8]) -> i64
@@ -527,13 +527,13 @@ fn binary_read(
 }
 
 pub fn transmute_integer_to_vec(
-    value: usize, 
+    value: usize,
     length: usize) -> Vec<u8>
 {
     let mut new_bytes:Vec<u8> = Vec::new();
     let mut temp = value;
     let mut i = 0;
-    while i < length 
+    while i < length
     {
         let byte = (temp & 0xff) as u8;
         new_bytes.push(byte);
@@ -544,16 +544,16 @@ pub fn transmute_integer_to_vec(
 }
 
 pub fn transmute_integer(
-    value: usize, 
+    value: usize,
     length: usize) -> String
 {
     let mut new_string = String::new();
     let mut temp = value;
     let mut i = 0;
-    while i < length 
+    while i < length
     {
         let byte = (temp & 0xff) as u8;
-        if 0x20 <= byte && byte <= 0x7e 
+        if 0x20 <= byte && byte <= 0x7e
         {
             new_string.push(byte as char);
         }
@@ -581,10 +581,10 @@ fn read_stack_string(
     let mut is_string: bool = false;
     let max_string_size = address + 32;
     let mut possible_string: Vec<u8> = Vec::new();
-    
-    if binary.len() == 0 
+
+    if binary.len() == 0
     {
-        return String::new(); 
+        return String::new();
     }
     if 0x00 < binary[index as usize] && binary[index as usize] < 0xFF
     {
@@ -592,10 +592,10 @@ fn read_stack_string(
         {
             let mut i = index-(addr_size as isize -1);
             let mut continue_string = true;
-            while i <= index  
+            while i <= index
             {
                 if 0x00 < binary[i as usize] && binary[i as usize] < 0x7e &&
-                    possible_string.len() <= max_string_size 
+                    possible_string.len() <= max_string_size
                 {
                     is_string = true;
                     possible_string.push(binary[i as usize]);
@@ -610,7 +610,7 @@ fn read_stack_string(
             index-=addr_size as isize;
         }
     }
-    
+
     if is_string{
         let mut new_string = String::new();
         for c in possible_string
@@ -620,7 +620,7 @@ fn read_stack_string(
             }
             else {
                 new_string.push_str(&format!("\\x{:02X}", c));
-            } 
+            }
         }
         return new_string;
     }
@@ -635,21 +635,21 @@ fn read_string(
     let mut is_string: bool = false;
     let max_string_size = address + 32;
     let mut possible_string: Vec<u8> = Vec::new();
-    let mut index = address-base_addr; 
+    let mut index = address-base_addr;
     if index < binary.len()
     {
-        if !is_data && (binary[index] == 0x00 || (0x00 < binary[index] && binary[index] < 0xFF)) 
+        if !is_data && (binary[index] == 0x00 || (0x00 < binary[index] && binary[index] < 0xFF))
         {
             // valid printable ascii
             while (possible_string.len() <= max_string_size &&
-                   index < binary.len() && 
-                   index+1 < binary.len()) && 
-                   0x20 <= binary[index] && binary[index] <= 0x7e 
+                   index < binary.len() &&
+                   index+1 < binary.len()) &&
+                   0x20 <= binary[index] && binary[index] <= 0x7e
             {
                 // unicode check
-                if binary[index] == 0x00 
+                if binary[index] == 0x00
                 {
-                    if (0x00 < binary[index+1] && binary[index+1] < 0xFF) && binary[index+1] !=0x00 
+                    if (0x00 < binary[index+1] && binary[index+1] < 0xFF) && binary[index+1] !=0x00
                     {
                         possible_string.push(binary[index+1]);
                         is_string = true;
@@ -667,8 +667,8 @@ fn read_string(
         } else if 0x00 < binary[index] && binary[index] < 0xFF
         {
             while (possible_string.len() <= max_string_size &&
-                   index < binary.len() && 
-                   index+1 < binary.len()) && 
+                   index < binary.len() &&
+                   index+1 < binary.len()) &&
                    0x00 < binary[index] && binary[index] <= 0xfe
             {
                 is_string = true;
@@ -686,7 +686,7 @@ fn read_string(
             }
             else {
                 new_string.push_str(&format!("\\x{:02X}", c));
-            } 
+            }
         }
         return new_string;
     }
@@ -697,7 +697,7 @@ impl <'a>MemoryManager<'a>
 {
     pub fn write(
         &mut self,
-        offset: usize, 
+        offset: usize,
         value: u64,
         value_size: usize) -> MemoryType
     {
@@ -725,7 +725,7 @@ impl <'a>MemoryManager<'a>
 
     pub fn read(
         &mut self,
-        offset: usize, 
+        offset: usize,
         value_size: usize,
         analysis: &mut Analysisx86) -> i64
     {
@@ -751,7 +751,7 @@ impl <'a>MemoryManager<'a>
                             bounds.binary);
                     },
                     MemoryType::Peb=>{
-                        
+
                         let value = binary_read(
                             offset,
                             value_size,
@@ -880,7 +880,7 @@ impl <'a>MemoryManager<'a>
     {
         for bounds in self.list.iter_mut()
         {
-            if offset >= bounds.base_addr && 
+            if offset >= bounds.base_addr &&
             offset < (bounds.base_addr + bounds.size)
             {
                 match bounds.mem_type
@@ -892,12 +892,12 @@ impl <'a>MemoryManager<'a>
                             Some(ref sections)=>{
                                 for section in sections.iter()
                                 {
-                                    if (section.name == ".data" || 
+                                    if (section.name == ".data" ||
                                         section.name == ".rdata" ||
-                                        section.name == ".idata") && 
+                                        section.name == ".idata") &&
                                         offset >= (section.virtual_address as usize +
                                         analysis.base as usize) &&
-                                        offset < (section.virtual_address as usize + 
+                                        offset < (section.virtual_address as usize +
                                         analysis.base as usize) +
                                         section.virtual_size as usize
                                         {
@@ -967,10 +967,10 @@ pub enum AnalysisResult
 }
 
 fn check_instr_already_analyzed(
-    offset: u64, 
+    offset: u64,
     analysis: &mut Analysisx86)->bool
 {
-    if (offset as i64) < 0 
+    if (offset as i64) < 0
     {
         return false;
     }
@@ -979,7 +979,7 @@ fn check_instr_already_analyzed(
         return true;
     }
     let mut start = offset-16;
-    if (offset as i64) < 16 
+    if (offset as i64) < 16
     {
         start = 0;
     }
@@ -992,14 +992,14 @@ fn check_instr_already_analyzed(
         if *key < offset && offset < (*key+(instr.instr.size as u64))
         {
             return true;
-        } 
+        }
     }
     return false;
 }
 
 /// Used for ignoring Non-Executable sections
 fn check_address_already_analyzed(
-    offset: u64, 
+    offset: u64,
     address_tracker: &BTreeMap<u64, usize>)->bool
 {
     if address_tracker.get(&offset).is_some()
@@ -1010,7 +1010,7 @@ fn check_address_already_analyzed(
         if *key < offset && offset < (*key+(*size as u64)+1)
         {
             return true;
-        } 
+        }
     }
     return false;
 }
@@ -1024,13 +1024,13 @@ pub fn analyze_instructionx86(
     queue: &mut VecDeque<Statex86>,
     )-> AnalysisResult
 {
-    if item.skipped_bytes > 0 
+    if item.skipped_bytes > 0
     {
         let _offset: usize = item.offset as usize;
         if check_instr_already_analyzed(
             item.offset as u64,
             analysis)
-        { 
+        {
             return AnalysisResult::Failed;
         }
         let bytes_instr = InstructionInfo
@@ -1041,12 +1041,12 @@ pub fn analyze_instructionx86(
         analysis.instr_info.insert(bytes_instr.instr.offset as u64, bytes_instr);
         return AnalysisResult::Failed;
     }
-    
+
     if !state.emulation_enabled {
         if check_instr_already_analyzed(
             item.offset as u64,
             analysis)
-        { 
+        {
             return AnalysisResult::End;
         }
     }
@@ -1060,32 +1060,32 @@ pub fn analyze_instructionx86(
         instr: item.clone(),
         detail: Vec::new(),
     };
-    
+
     // Start analyzing instructions
     emulate_instructions(
-        valid_instr.instr.offset as u64, 
-        &mut valid_instr, 
+        valid_instr.instr.offset as u64,
+        &mut valid_instr,
         analysis,
         mem_manager,
         state);
 
     match check_data_transfer_instructions(
-        valid_instr.instr.offset as u64, 
-        &mut valid_instr, 
+        valid_instr.instr.offset as u64,
+        &mut valid_instr,
         analysis,
         mem_manager,
         state)
     {
         Some(offset_state)=>{
-          queue.push_back(offset_state);  
+          queue.push_back(offset_state);
         },
         None=>{},
     }
 
     // (Call is always taken unless an import or invalid)
     match check_call(
-        valid_instr.instr.offset as u64, 
-        &mut valid_instr, 
+        valid_instr.instr.offset as u64,
+        &mut valid_instr,
         analysis,
         mem_manager,
         state)
@@ -1097,7 +1097,7 @@ pub fn analyze_instructionx86(
                 if state.emulation_enabled
                 {
                     analysis.instr_info.insert(valid_instr.instr.offset as u64, valid_instr);
-                    return AnalysisResult::End;  
+                    return AnalysisResult::End;
                 }
             }
             if left_state.offset != 0 {
@@ -1111,7 +1111,7 @@ pub fn analyze_instructionx86(
                     valid_instr.detail.push(
                         DetailInfo
                         {
-                            op_index: 0, 
+                            op_index: 0,
                             contents: format!("FUNC 0x{:x} END", &state.current_function_addr)
                         });
                     if !state.emulation_enabled
@@ -1149,7 +1149,7 @@ pub fn analyze_instructionx86(
                     valid_instr.detail.push(
                         DetailInfo
                         {
-                            op_index: 0, 
+                            op_index: 0,
                             contents: format!("FUNC 0x{:x} END", &state.current_function_addr)
                         });
                     if !state.emulation_enabled
@@ -1179,14 +1179,14 @@ pub fn analyze_instructionx86(
         },
         _=>{},
     }
-    
+
     // analyze jmp/branch instructions
     match check_branch_instructions(
-        valid_instr.instr.offset as u64, 
-        &mut valid_instr, 
+        valid_instr.instr.offset as u64,
+        &mut valid_instr,
         analysis,
         mem_manager,
-        state) 
+        state)
     {
         (Some(left_state), Some(right_state), is_taken)=>{
             if right_state.offset != 0
@@ -1244,11 +1244,11 @@ pub fn analyze_instructionx86(
         },
         _=>{},
     }
-    
+
     // finish analysis
     let (is_return, return_state) = check_return(
-        valid_instr.instr.offset as u64, 
-        &mut valid_instr, 
+        valid_instr.instr.offset as u64,
+        &mut valid_instr,
         analysis,
         mem_manager,
         state);
@@ -1267,12 +1267,12 @@ pub fn analyze_instructionx86(
         }
         if !state.emulation_enabled {
             let (is_padding, new_offset) = check_if_padding(
-                valid_instr.instr.offset as usize + valid_instr.instr.size, 
-                analysis, 
+                valid_instr.instr.offset as usize + valid_instr.instr.size,
+                analysis,
                 mem_manager);
             if is_padding
             {
-                let post_analysis: Statex86 = Statex86 
+                let post_analysis: Statex86 = Statex86
                 {
                     offset: new_offset,
                     cpu: state.cpu.clone(),
@@ -1288,17 +1288,17 @@ pub fn analyze_instructionx86(
         analysis.instr_info.insert(valid_instr.instr.offset as u64, valid_instr);
         return AnalysisResult::End;
     }
-    
+
     // default
     analysis.instr_info.insert(valid_instr.instr.offset as u64, valid_instr);
     return AnalysisResult::Continue;
 }
 
 pub fn check_instruction_exists(
-    offset: u64, 
+    offset: u64,
     analysis: &mut Analysisx86) -> Option<Instruction<X86Detail>>
 {
-    
+
     match analysis.instr_info.get_mut(&(offset))
     {
         Some(info)=>{
@@ -1342,7 +1342,7 @@ pub fn recurse_disasmx86(
                 continue;
             }
         }
-        
+
         match state.analysis_type
         {
             AnalysisType::Data=>{
@@ -1351,8 +1351,8 @@ pub fn recurse_disasmx86(
                     return true;
                 }
                 match analyze_datax86(
-                    state.offset, 
-                    analysis, 
+                    state.offset,
+                    analysis,
                     mem_manager,
                     state,
                     queue)
@@ -1371,7 +1371,7 @@ pub fn recurse_disasmx86(
                 if check_address_already_analyzed(
                     state.offset as u64,
                     &analysis.address_tracker)
-                { 
+                {
                     return true;
                 }
 
@@ -1394,16 +1394,16 @@ pub fn recurse_disasmx86(
                     },
                     None=>{
                         analysis.xi.disasm(
-                            mem_manager.get_image_by_type(MemoryType::Image), 
+                            mem_manager.get_image_by_type(MemoryType::Image),
                             image_size,
-                            analysis.base, 
+                            analysis.base,
                             state.offset,
-                            chunk_length, 
+                            chunk_length,
                             &mut vec);
                         if vec.len() > 0
                         {
                             let mut last_instr_addr = state.offset + chunk_length; // default
-                            
+
                             for instruction in vec.iter_mut()
                             {
                                 match analyze_instructionx86(
@@ -1414,13 +1414,13 @@ pub fn recurse_disasmx86(
                                     queue)
                                 {
                                     AnalysisResult::Failed=>{
-                                        last_instr_addr = instruction.address as usize + 
+                                        last_instr_addr = instruction.address as usize +
                                         instruction.skipped_bytes as usize;
                                     },
                                     AnalysisResult::End=>{
                                         return true;
                                     },
-                                    AnalysisResult::Continue=>{                                       
+                                    AnalysisResult::Continue=>{
                                         last_instr_addr = instruction.address as usize + instruction.size;
                                     },
                                 }
@@ -1432,7 +1432,7 @@ pub fn recurse_disasmx86(
                 }
             },
         }
-        
+
     }
     return true;
 }
