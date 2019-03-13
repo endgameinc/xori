@@ -7,6 +7,7 @@ var fs = require('fs');
 var mv = require('mv');
 var chokidar = require('chokidar');
 const md5File = require('md5-file')
+var cors = require('cors');
 
 const {
   spawn
@@ -22,12 +23,20 @@ var upload = multer({
   dest: dynamic_storage_path
 });
 
-//Allow cross origin request from anything FIXME
-app.use(function(req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  next();
-});
+//Create a whitelist of allowed domains, and check each request against the whitelist.
+var whitelist = ['http://localhost:3000']
+var corsOptions = {
+  origin: function (origin, callback) {
+    if (whitelist.indexOf(origin) !== -1) {
+      callback(null, true)
+    } else {
+      callback(new Error('Not allowed by CORS'))
+    }
+  }
+}
+
+// Then pass them to cors:
+app.use(cors(corsOptions));
 
 
 // respond with "hello world" when a GET request is made to the homepage
