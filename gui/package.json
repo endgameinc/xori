@@ -7,6 +7,7 @@
     "chokidar": "^2.0.4",
     "classnames": "^2.2.6",
     "connect-busboy": "^0.0.2",
+    "cors": "^2.8.5",
     "d3": "4.0.0",
     "dagre-d3": "^0.6.1",
     "express": "^4.16.3",
