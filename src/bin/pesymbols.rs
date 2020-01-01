@@ -24,7 +24,8 @@ use std::io::prelude::*;
 use std::io::Read;
 use url::Url;
 use reqwest::Client;
-use reqwest::header::UserAgent;
+//https://docs.rs/reqwest/0.9.0/reqwest/struct.RequestBuilder.html
+use reqwest::header::USER_AGENT;
 
 #[allow(dead_code)]
 fn download_pdb(
@@ -51,10 +52,11 @@ fn download_pdb(
     println!("{}\n{}", url, user_agent);
     let mut response = Client::new()
             .get(url)
-            .header(UserAgent::new(user_agent.clone()))
+            .header(USER_AGENT, "foo")
             .send()
             .expect("Failed to send request");
-    if response.status() == reqwest::StatusCode::Unregistered(200)
+    //if response.status() == reqwest::StatusCode::Unregistered(200)
+    if response.status() == reqwest::StatusCode::OK
     {
         let mut buffer: Vec<u8> = Vec::new();
         response.read_to_end(&mut buffer)
