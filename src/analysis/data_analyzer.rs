@@ -169,7 +169,7 @@ pub fn analyze_datax86(
                     _=>{},
                 }
                 instructions.size = address_size;
-                let mut valid_instr = InstructionInfo
+                let valid_instr = InstructionInfo
                   {
                     instr: instructions,
                     detail: Vec::new(),
