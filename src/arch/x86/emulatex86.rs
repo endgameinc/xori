@@ -733,7 +733,7 @@ fn mulx86(signed: bool, size: usize, value2: i64, _state: &mut Statex86)
         },
         2=>{
             let reg = _state.cpu.get_register(&(Registersx86::AX as u8), 0);
-            let (mut temp, _is_overflow) = match signed
+            let (temp, _is_overflow) = match signed
             {
                 true=>{
                     let (temp, _of) = (reg as i32).overflowing_mul(value2 as i32);
@@ -761,7 +761,7 @@ fn mulx86(signed: bool, size: usize, value2: i64, _state: &mut Statex86)
         },
         4=>{
             let reg = _state.cpu.get_register(&(Registersx86::EAX as u8), 0);
-            let (mut temp, _is_overflow) = match signed
+            let (temp, _is_overflow) = match signed
             {
                 true=>{
                     let (temp, _of) = (reg as i64).overflowing_mul(value2 as i64);
@@ -790,7 +790,7 @@ fn mulx86(signed: bool, size: usize, value2: i64, _state: &mut Statex86)
         _=>{
             let reg = _state.cpu.get_register(&(Registersx86::RAX as u8), 0);
 
-            let (mut temp, _is_overflow) = match signed
+            let (temp, _is_overflow) = match signed
             {
                 true=>{
                     let (temp, _of) = (reg as i128).overflowing_mul(value2 as i128);
@@ -1632,7 +1632,7 @@ fn check_binary_arithmetic_instructions(
 
             };
             // TODO: fix this
-            let mut auxiliary = FlagDefined::Unset;
+            let auxiliary = FlagDefined::Unset;
             
             // set first operand
             match _state.cpu.address_size{
@@ -1998,7 +1998,7 @@ fn check_shift_rotate_instructions(
                     ((v as i8) as i64, FlagDefined::Unset)
                 },
                 2=>{
-                    let (v, mut ov) = (value1 as i16).overflowing_shr(value2 as u32);
+                    let (v, ov) = (value1 as i16).overflowing_shr(value2 as u32);
                     let mut overflow = FlagDefined::Unset;
                     if ov{
                         overflow = FlagDefined::Set;
@@ -2009,7 +2009,7 @@ fn check_shift_rotate_instructions(
                     ((v as i16) as i64, overflow) 
                 },
                 4=>{
-                    let (v, mut ov) = (value1 as i32).overflowing_shr(value2 as u32);
+                    let (v, ov) = (value1 as i32).overflowing_shr(value2 as u32);
                     let mut overflow = FlagDefined::Unset;
                     if ov{
                         overflow = FlagDefined::Set;
@@ -2186,7 +2186,7 @@ fn check_shift_rotate_instructions(
                     ((v as i8) as i64, FlagDefined::Unset)
                 },
                 2=>{
-                    let (v, mut ov) = (value1 as u16).overflowing_shr(value2 as u32);
+                    let (v, ov) = (value1 as u16).overflowing_shr(value2 as u32);
                     let mut overflow = FlagDefined::Unset;
                     if ov{
                         overflow = FlagDefined::Set;
@@ -2197,7 +2197,7 @@ fn check_shift_rotate_instructions(
                     ((v as i16) as i64, overflow) 
                 },
                 4=>{
-                    let (v, mut ov) = (value1 as u32).overflowing_shr(value2 as u32);
+                    let (v, ov) = (value1 as u32).overflowing_shr(value2 as u32);
                     let mut overflow = FlagDefined::Unset;
                     if ov{
                         overflow = FlagDefined::Set;

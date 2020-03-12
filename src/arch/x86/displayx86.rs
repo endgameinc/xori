@@ -21493,10 +21493,10 @@ pub fn build_immediates<T: ArchDetail>(
             if _immediate <= 0xf {
                 match opcode{
                     //CMPPD, CMPPS, CMPSD, CMPSS
-                    550...553 | //CMPPD,
-                    554...557 | //CMPPS,
-                    559...562 | //CMPSD
-                    565...568 // CMPSS
+                    550..=553 | //CMPPD,
+                    554..=557 | //CMPPS,
+                    559..=562 | //CMPSD
+                    565..=568 // CMPSS
                     =>set_sse_cc(_detail, _immediate),
                     _=>{},
                 }
@@ -21650,7 +21650,7 @@ pub fn build_rm_register<T: ArchDetail>(
             }
             match rm.base_ea{
                 r if r == Registersx86::NoRegister as u16=>{ return false; },
-                1...260=>{                    
+                1..=260=>{                    
                     match rm.kind {
                         RegType::AllRegisters=>{
                             let offset = rm.base_ea;
@@ -21700,7 +21700,7 @@ pub fn build_rm_memory<T: ArchDetail>(
                     Some(ref sib)=>{
                         if sib.sib_base != Registersx86::NoRegister as u8{
                             match sib.sib_base{
-                                1...211=>{ // All Registers
+                                1..=211=>{ // All Registers
                                     _base_reg = AllRegisters::translate(sib.sib_base);                                    
                                 }
                                 _=>{ 

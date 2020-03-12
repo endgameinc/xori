@@ -73,7 +73,7 @@ fn prefix_check(
     disasm_debug!("prefix_check(byte: {:?})", byte);
     match *byte
     {
-        0x40...0x4f => match *mode{ Modex86::Mode64 => return true, _=> return false, }, /* REX */
+        0x40..=0x4f => match *mode{ Modex86::Mode64 => return true, _=> return false, }, /* REX */
         0x26 => return true, /* ES */
         0x2e => return true, /* CS */
         0x36 => return true, /* SS */
@@ -195,7 +195,7 @@ fn prefix_populate_states(
     disasm_debug!("prefix_populate_states(byte: {:x})", *byte);
     match *byte
     {
-        0x40...0x4f => match _instr.mode{ /* REX */
+        0x40..=0x4f => match _instr.mode{ /* REX */
                 Modex86::Mode64 => {
                     let flag = PrefixFlagsx86::Rex as u32;
                     let mask = PrefixMaskx86::Rex as usize;

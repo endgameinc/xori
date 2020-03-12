@@ -223,7 +223,7 @@ impl SigAnalyzer
                         }
                     }
                 }
-                regex = regex.trim_right_matches("|").to_string();
+                regex = regex.trim_end_matches("|").to_string();
                 self.full_signatures_regex = Regex::new(&regex).unwrap();
             },
             _=>{},
@@ -251,7 +251,7 @@ impl SigAnalyzer
                         })).as_str()).unwrap();
 
                         let marked_offset = &v[4];
-                        let offset = usize::from_str_radix(marked_offset.trim_left_matches(':').trim_right_matches('@'), 16).unwrap(); // has special trailing chars and starts with :
+                        let offset = usize::from_str_radix(marked_offset.trim_start_matches(':').trim_end_matches('@'), 16).unwrap(); // has special trailing chars and starts with :
                         let mut my_refs = vec![];
                         if v.len() > 6 {
                             for rawref in v[6..].iter().collect::<Vec<_>>().chunks(2) { // keep first ref
@@ -261,8 +261,8 @@ impl SigAnalyzer
                                 //16).unwrap() > 0x8000 { continue; } // bold play to try and keep
                                 //within bounds // this may be necessary again to make sure we
                                 //don't step over the bounds of the binary
-                                let mut flirtref = FlirtRef {
-                                    offset: usize::from_str_radix((rawref[0]).trim_left_matches('^').trim_left_matches(':').trim_right_matches('@'), 16).unwrap(),
+                                let flirtref = FlirtRef {
+                                    offset: usize::from_str_radix((rawref[0]).trim_start_matches('^').trim_start_matches(':').trim_end_matches('@'), 16).unwrap(),
                                     refkind: match rawref[0].chars().next().unwrap() {
                                         ':' => RefKind::Local,
                                         _ => RefKind::Reference,
@@ -329,7 +329,7 @@ impl SigAnalyzer
                 for (ind_fm, fm) in fmvec.iter().enumerate() {
                     for sigref in &self.flirts.get(&fm.name).unwrap().references {
                         if known.contains_key(&(fm.offset + sigref.offset)) {
-                            let mut xs = _superunknown.get_mut(&(fm.offset)).unwrap();
+                            let xs = _superunknown.get_mut(&(fm.offset)).unwrap();
                             if xs[ind_fm].refcount == 0 {
                                 known.insert(fm.offset,fm.clone());
                                 xs.remove(ind_fm);
@@ -385,7 +385,7 @@ impl SigAnalyzer
                         regex += &format!("{}|", sig);
                     }
                 }
-                regex = regex.trim_right_matches("|").to_string();
+                regex = regex.trim_end_matches("|").to_string();
                 let re = Regex::new(&regex).unwrap();
                 for cap in re.captures_iter(&bytes) {
                     match cap.name(sig_name) {
