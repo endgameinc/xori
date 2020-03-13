@@ -24,7 +24,7 @@ use std::io::prelude::*;
 use std::io::Read;
 use url::Url;
 use reqwest::Client;
-use reqwest::header::UserAgent;
+use reqwest::header::USER_AGENT;
 
 #[allow(dead_code)]
 fn download_pdb(
@@ -51,10 +51,10 @@ fn download_pdb(
     println!("{}\n{}", url, user_agent);
     let mut response = Client::new()
             .get(url)
-            .header(UserAgent::new(user_agent.clone()))
+            .header(USER_AGENT, "curl/7.65.3")
             .send()
             .expect("Failed to send request");
-    if response.status() == reqwest::StatusCode::Unregistered(200)
+    if response.status() == reqwest::StatusCode::OK
     {
         let mut buffer: Vec<u8> = Vec::new();
         response.read_to_end(&mut buffer)
@@ -74,7 +74,7 @@ fn extract_exports(dll_path: &Path) -> Option<(Vec<Export>, SectionTable, String
 {
     let file = std::fs::File::open(dll_path).expect("failed to open the file");
     let mmap = unsafe { Mmap::map(&file).expect("failed to map the file") };
-    
+
 
     let pe_offset;
     let mut dll_exports: Vec<Export> = Vec::new();
@@ -90,7 +90,7 @@ fn extract_exports(dll_path: &Path) -> Option<(Vec<Export>, SectionTable, String
     let export_table_offset;
     let export_table_size;
     let _bits;
-    match pe_header(&mmap[pe_offset..]) 
+    match pe_header(&mmap[pe_offset..])
     {
         Ok((cursor, peh)) => {
             match peh.image_optional_header {
@@ -109,7 +109,7 @@ fn extract_exports(dll_path: &Path) -> Option<(Vec<Export>, SectionTable, String
                     _bits = 64;
                 }
             }
-            
+
             let dll_section_table: SectionTable = match section_table(cursor, peh.coff_header.num_sections)
             {
                 Ok((_i, section_table))=>section_table,
@@ -119,7 +119,7 @@ fn extract_exports(dll_path: &Path) -> Option<(Vec<Export>, SectionTable, String
             let (header_copy, export_dir) = build_dll_header_with_exportrva(
                 &mmap,
                 export_table_offset as usize,
-                rva_to_file_offset(export_table_offset as usize, &dll_section_table) as usize, 
+                rva_to_file_offset(export_table_offset as usize, &dll_section_table) as usize,
                 export_table_size as usize);
 
             let export_descriptor: ImageExportDescriptor = match image_export_descriptor(
@@ -128,7 +128,7 @@ fn extract_exports(dll_path: &Path) -> Option<(Vec<Export>, SectionTable, String
                 Ok((_i, export_desc))=> export_desc,
                 Err(_err)=> return None,
             };
-            
+
             let _dllname = match import_dll_name(
                 &mmap[rva_to_file_offset(export_descriptor.name as usize, &dll_section_table,)..],)
             {
@@ -190,7 +190,7 @@ fn extract_exports(dll_path: &Path) -> Option<(Vec<Export>, SectionTable, String
                 dll_exports.push(
                     Export
                     {
-                        
+
                         name: export_name,
                         rva: func_addr as u64,
                         ordinal: func_ordinal + export_descriptor.base as u16,
@@ -198,7 +198,7 @@ fn extract_exports(dll_path: &Path) -> Option<(Vec<Export>, SectionTable, String
                         forwarder_name: forwarder_name,
                     });
             }
-            return Some((dll_exports, dll_section_table,header_copy, export_dir));           
+            return Some((dll_exports, dll_section_table,header_copy, export_dir));
         },
         _=>{},
     }
@@ -213,21 +213,21 @@ fn extract_symbols(output_path: &Path, section_table: &SectionTable) -> Vec<Expo
         .expect("error: PDB file failed to open");
 
     let mut pdb = pdb::PDB::open(file).expect("error: PDB parser failed");
-    
+
     let symbol_table = pdb.global_symbols()
         .expect("error: PDB global symbols failed");
-    
+
     let mut symbols = symbol_table.iter();
     let mut exports: Vec<Exports> = Vec::new();
     while let Some(symbol) = symbols.next()
-        .expect("error: PDB could not get next symbol") 
+        .expect("error: PDB could not get next symbol")
     {
 
-        match symbol.parse() 
+        match symbol.parse()
         {
-            Ok(pdb::SymbolData::PublicSymbol(data)) => 
+            Ok(pdb::SymbolData::PublicSymbol(data)) =>
             {
-                /* For Reference 
+                /* For Reference
                 pub struct PublicSymbol {
                     pub code: bool,
                     pub function: bool,
@@ -236,7 +236,7 @@ fn extract_symbols(output_path: &Path, section_table: &SectionTable) -> Vec<Expo
                     pub offset: u32,
                     pub segment: u16,
                 }*/
-                
+
                 let mut function_name = String::from(symbol.name()
                     .expect("failed to get symbol name").to_string());
                 /*let mut truncated_name = function_name.clone();
@@ -261,7 +261,7 @@ fn extract_symbols(output_path: &Path, section_table: &SectionTable) -> Vec<Expo
                             rva: export_vaddr,
                         });
                     }
-                //} 
+                //}
                 */
                 println!("pdb name: {} data: {:?}", function_name, data);
                         exports.push(Exports
@@ -269,7 +269,7 @@ fn extract_symbols(output_path: &Path, section_table: &SectionTable) -> Vec<Expo
                             function: String::from(function_name),
                             rva: data.offset as usize,
                         });
-                
+
             },
             _ => {},
         }
@@ -282,7 +282,7 @@ fn extract_symbols(output_path: &Path, section_table: &SectionTable) -> Vec<Expo
 /*
 0  4  Signature  0x52 0x53 0x44 0x53 (ASCII string: "RSDS")
 4  16  Guid  GUID (Globally Unique Identifier) of the associated PDB.
-20  4  Age  Iteration of the PDB. The first iteration is 1. 
+20  4  Age  Iteration of the PDB. The first iteration is 1.
         The iteration is incremented each time the PDB content is augmented.
 24    Path  UTF-8 NUL-terminated path to the associated .pdb file
 */
@@ -301,10 +301,10 @@ fn get_guid(path: &Path) -> PdbDir
         .expect("failed to map the file") };
     named!(find_dir, take_until_and_consume!("RSDS"));
     named!(guid<&[u8], (u32, u16, u16, u64, u32) >,
-    /* todo name these... there is a from MS generator hiding 
-    in this PR if we want to name the chunks 
+    /* todo name these... there is a from MS generator hiding
+    in this PR if we want to name the chunks
     https://github.com/dotnet/roslyn/issues/926 */
-      tuple!( 
+      tuple!(
         le_u32,
         le_u16,
         le_u16,
@@ -335,9 +335,9 @@ fn get_guid(path: &Path) -> PdbDir
 }
 
 fn build_dll_header_with_exportrva(
-    _binary: &[u8], 
+    _binary: &[u8],
     export_table_rva: usize,
-    export_table_offset: usize, 
+    export_table_offset: usize,
     export_table_size: usize) -> (String, ExportDirectory)
 {
     // only collect 0x300 bytes
@@ -379,22 +379,22 @@ fn main()
     if conf_path.exists()
     {
         config_map = read_config(&conf_path);
-    } 
+    }
     else if Path::new("xori.json").exists()
     {
         config_map = read_config(&Path::new("xori.json"));
-    } 
+    }
     else {
         println!("error: config file does not exist, using default configurations.");
     }
-    
+
     let _url = config_map.x86.pe_file.symbol_server.url;
     let _url = config_map.x86.pe_file.symbol_server.user_agent;
     let dllfolder32 = config_map.x86.pe_file.symbol_server.dll_folder32;
     let dllfolder64 = config_map.x86.pe_file.symbol_server.dll_folder64;
     let dll32 = Path::new(&dllfolder32);
     let dll64 = Path::new(&dllfolder64);
-    
+
     if dll32.exists()
     {
         println!("Getting 32bit symbols.");
@@ -448,10 +448,10 @@ fn main()
     else {
         println!("error: Dll folder does not exist.");
     }
-    
+
     if dll64.exists()
     {
-        
+
         println!("Getting 64bit symbols.");
         let mut symbols64: Vec<Symbol> = Vec::new();
         let paths = fs::read_dir(dll64).expect("error: dll folder64 is empty");
@@ -490,7 +490,7 @@ fn main()
                 _=>{},
             }
         }
-        
+
         //create json
         if symbols64.len() > 0
         {
