@@ -51,7 +51,7 @@ fn download_pdb(
     println!("{}\n{}", url, user_agent);
     let mut response = Client::new()
             .get(url)
-            .header(USER_AGENT, "curl/7.65.3")
+            .header(USER_AGENT, &*user_agent)
             .send()
             .expect("Failed to send request");
     if response.status() == reqwest::StatusCode::OK
