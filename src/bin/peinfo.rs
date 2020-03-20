@@ -14,8 +14,9 @@ use xori::analysis::formats::pe::{dos_header, dos_stub, image_import_by_name,
                                   ImageDataIndex, ImageOptionalHeaderKind, import_address_table32,
                                   import_address_table64, import_lookup_table32,
                                   import_lookup_table64};
-use nom::{ErrorKind, HexDisplay, IResult, InputLength, Needed, Offset, be_u8, le_u16, le_u32,
-          le_u64, le_u8};
+use nom::{HexDisplay, IResult, InputLength, Needed, Offset};
+use nom::error::ErrorKind;
+use nom::number::complete::{be_u8, le_u64, le_u32, le_u16, le_u8};
 extern crate serde;
 extern crate serde_json;
 

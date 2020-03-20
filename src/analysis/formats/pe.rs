@@ -1,6 +1,7 @@
 pub extern crate serde;
 pub extern crate serde_json;
-use nom::{IResult, InputLength, le_u64, le_u32, le_u16, le_u8};
+use nom::{IResult, InputLength};
+use nom::number::complete::{le_u64, le_u32, le_u16, le_u8};
 //use nom::HexDisplay;
 pub use disasm::*;
 //use analysis::analyze::Header;
@@ -60,6 +61,13 @@ pub struct RuntimeFunctions {
 pub struct ImageData {
     pub virtual_address: u32,
     pub size: u32
+}
+
+fn vec_to_array_idd(bytes: &[ImageData]) -> [ImageData; 16] {
+    let mut array = [ImageData{virtual_address:0,size:0}; 16];
+    let bytes = &bytes[..array.len()]; // panics if not enough data
+    array.copy_from_slice(bytes);
+    array
 }
 
 #[derive(Debug,Serialize,Deserialize)]
@@ -549,7 +557,7 @@ pub fn image_optional_header64(input:&[u8]) -> IResult<&[u8], ImageOptionalHeade
         size_of_heap_commit: le_u64 >>
         loader_flags: le_u32 >>
         number_of_rva_and_sizes: le_u32 >>
-        image_data_directory: count_fixed!(ImageData, image_data, 16) >>
+        image_data_directory: count!(image_data, 16) >>
         ( ImageOptionalHeaderKind::Pe32Plus(ImageOptionalHeader64 {
         magic: 0x20B,
         major_linker_version: major_linker_version,
@@ -580,7 +588,7 @@ pub fn image_optional_header64(input:&[u8]) -> IResult<&[u8], ImageOptionalHeade
         size_of_heap_commit: size_of_heap_commit,
         loader_flags: loader_flags,
         number_of_rva_and_sizes: number_of_rva_and_sizes,
-        image_data_directory
+        image_data_directory: vec_to_array_idd(&image_data_directory)
         }))
   )
 }
@@ -616,7 +624,7 @@ pub fn image_optional_header(input:&[u8]) -> IResult<&[u8], ImageOptionalHeaderK
         size_of_heap_commit: le_u32 >>
         loader_flags: le_u32 >>
         number_of_rva_and_sizes: le_u32 >>
-        image_data_directory: count_fixed!(ImageData, image_data, 16) >>
+        image_data_directory: count!(image_data, 16) >>
         (  ImageOptionalHeaderKind::Pe32(ImageOptionalHeader {
         magic: 0x10B,
         major_linker_version: major_linker_version,
@@ -648,7 +656,7 @@ pub fn image_optional_header(input:&[u8]) -> IResult<&[u8], ImageOptionalHeaderK
         size_of_heap_commit: size_of_heap_commit,
         loader_flags: loader_flags,
         number_of_rva_and_sizes: number_of_rva_and_sizes,
-        image_data_directory
+        image_data_directory: vec_to_array_idd(&image_data_directory)
         }) 
             )
   )
