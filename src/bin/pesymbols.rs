@@ -9,7 +9,7 @@ extern crate url;
 extern crate pdb;
 #[macro_use]
 extern crate nom;
-use nom::{be_u64, le_u32, le_u16};
+use nom::number::complete::{be_u64, le_u32, le_u16};
 extern crate xori;
 use xori::configuration::*;
 use xori::analysis::formats::pe::*;
@@ -299,7 +299,7 @@ fn get_guid(path: &Path) -> PdbDir
         .expect("failed to open the file");
     let mmap = unsafe { Mmap::map(&file)
         .expect("failed to map the file") };
-    named!(find_dir, take_until_and_consume!("RSDS"));
+    named!(find_dir, take_until!("RSDS"));
     named!(guid<&[u8], (u32, u16, u16, u64, u32) >,
     /* todo name these... there is a from MS generator hiding
     in this PR if we want to name the chunks
@@ -314,7 +314,7 @@ fn get_guid(path: &Path) -> PdbDir
     );
 
     named!(pdb_path<&[u8], &[u8]>,
-           take_until_and_consume!("\0"));
+           take_until!("\0"));
     let res = find_dir(&mmap);
     let guid_res;
     match res {

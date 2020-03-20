@@ -7,7 +7,7 @@ authors = [ "amanda@endgame.com" ]
 debug = true
 
 [dependencies]
-nom = "4.2.3"
+nom = "5.1.1"
 num = "0.2.1"
 colored = "1.9.3"
 memmap = "0.7.0"
