@@ -268,7 +268,7 @@ fn main()
 {
     let mut functions: String = String::new();
     let mut disassembly: String = String::new();
-    let mut function_address: String = String::new();;
+    let mut function_address: String = String::new();
     let mut show: bool = false;
 
     {
