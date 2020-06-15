@@ -21245,7 +21245,7 @@ pub fn build_src_mem_operand<T: ArchDetail>(
         _detail.operands()[0]=temp;
         *_nmemonic = format!("{}, {}", mem_operand, *_nmemonic);
         let last = _nmemonic.len()-2;
-        _nmemonic.split_off(last);
+        _nmemonic.truncate(last);
     } else {
         *_nmemonic = format!("{}{}", *_nmemonic, mem_operand);
     }
