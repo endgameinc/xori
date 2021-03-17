@@ -93,7 +93,7 @@ after the successful installation you can see that the rust compiler **rustc**, 
 
 ## 1. Build Xori
 
-This command will also create other binaries such as pesymbols ans peinfo.
+This command will also create other binaries such as pesymbols and peinfo.
 
 ```
 git clone https://github.com/endgameinc/xori.git
